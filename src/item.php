@@ -157,6 +157,7 @@ if (!empty($_REQUEST["action"])) {
 		$stmt->execute();
 
 		if ($row = $stmt->fetch()) {
+			echo $row["description"];
 			$description = $row["description"];
 			$price = number_format($row["price"],2,".",",");
 			$source = $row["source"];

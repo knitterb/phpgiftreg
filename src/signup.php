@@ -12,6 +12,14 @@
 // You should have received a copy of the GNU General Public License
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+use PHPMailer\PHPMailer\PHPMailer;
+use PHPMailer\PHPMailer\SMTP;
+use PHPMailer\PHPMailer\Exception;
+
+require 'phpmailer/Exception.php';
+require 'phpmailer/SMTP.php';
+require 'phpmailer/PHPMailer.php';
+
 
 require_once(dirname(__FILE__) . "/includes/funcLib.php");
 require_once(dirname(__FILE__) . "/includes/MySmarty.class.php");
@@ -51,12 +59,48 @@ if (isset($_POST["action"]) && $_POST["action"] == "signup") {
 			$stmt = $smarty->dbh()->prepare("SELECT fullname, email FROM {$opt["table_prefix"]}users WHERE admin = 1 AND email IS NOT NULL");
 			$stmt->execute();
 			while ($row = $stmt->fetch()) {
+				/*
 				mail(
 					$row["email"],
 					"Gift Registry approval request for " . $fullname,
 					$fullname . " <" . $email . "> would like you to approve him/her for access to the Gift Registry.",
 					"From: {$opt["email_from"]}\r\nReply-To: {$opt["email_reply_to"]}\r\nX-Mailer: {$opt["email_xmailer"]}\r\n"
 				) or die("Mail not accepted for " . $row["email"]);
+				 */
+
+
+				$mail = new PHPMailer(true);
+
+                                try {
+                                    // Specify the SMTP settings.
+                                    $mail->isSMTP();
+				    $mail->setFrom($opt["email_from"], "PHP Gift Registry");
+				                                        $mail->Username   = $opt["ses_email_username"];
+                                    $mail->Password   = $opt["ses_email_password"];
+
+                                    $mail->Host       = "email-smtp.us-east-1.amazonaws.com";
+                                    $mail->Port       = 587;
+                                    $mail->SMTPAuth   = true;
+                                    $mail->SMTPSecure = 'tls';
+                                    //$mail->addCustomHeader('X-SES-CONFIGURATION-SET', $configurationSet);
+
+                                    // Specify the message recipients.
+                                    $mail->addAddress($email);
+                                    // You can also add CC, BCC, and additional To recipients here.
+
+                                    // Specify the content of the message.
+                                    $mail->isHTML(false);
+                                    $mail->Subject    = "PHP Gift Registry: Account Creation Approval";
+                                    $mail->Body       = "$fullname  $email would like you to approve him/her for access to the Gift Registry.";
+                                    //$mail->AltBody    = "test alt body";
+                                    $mail->Send();
+                                } catch (phpmailerException $e) {
+                                    echo "An error occurred. {$e->errorMessage()}", PHP_EOL; //Catch errors from PHPMailer.
+                                } catch (Exception $e) {
+                                    echo "Email not sent. {$mail->ErrorInfo}", PHP_EOL; //Catch errors from Amazon SES.
+                                }
+
+
 			}
 		}
 		else {
@@ -76,13 +120,48 @@ if (isset($_POST["action"]) && $_POST["action"] == "signup") {
 					$stmt->execute();
 				}
 
+				/*
 				mail(
 					$email,
 					"Gift Registry account created",
 					"Your Gift Registry account was created.\r\n" . 
 						"Your username is $username and your password is $pwd.",
 					"From: {$opt["email_from"]}\r\nReply-To: {$opt["email_reply_to"]}\r\nX-Mailer: {$opt["email_xmailer"]}\r\n"
-				) or die("Mail not accepted for $email");	
+				) or die("Mail not accepted for $email");
+				 */	
+				$mail = new PHPMailer(true);
+
+                                try {
+                                    // Specify the SMTP settings.
+                                    $mail->isSMTP();
+				    $mail->setFrom($opt["email_from"], "PHP Gift Registry");
+				                                        $mail->Username   = $opt["ses_email_username"];
+                                    $mail->Password   = $opt["ses_email_password"];
+
+                                    $mail->Host       = "email-smtp.us-east-1.amazonaws.com";
+                                    $mail->Port       = 587;
+                                    $mail->SMTPAuth   = true;
+                                    $mail->SMTPSecure = 'tls';
+                                    //$mail->addCustomHeader('X-SES-CONFIGURATION-SET', $configurationSet);
+
+                                    // Specify the message recipients.
+                                    $mail->addAddress($email);
+                                    // You can also add CC, BCC, and additional To recipients here.
+
+                                    // Specify the content of the message.
+                                    $mail->isHTML(false);
+                                    $mail->Subject    = "PHP Gift Registry: Account Creation";
+                                    $mail->Body       = "Your username is '" . $username . "' and your password is '$pwd'.";
+                                    //$mail->AltBody    = "test alt body";
+                                    $mail->Send();
+                                    //echo "Email sent!" , PHP_EOL;
+                                } catch (phpmailerException $e) {
+                                    echo "An error occurred. {$e->errorMessage()}", PHP_EOL; //Catch errors from PHPMailer.
+                                } catch (Exception $e) {
+                                    echo "Email not sent. {$mail->ErrorInfo}", PHP_EOL; //Catch errors from Amazon SES.
+                                }
+
+
 			}
 		}
 	}
