@@ -70,37 +70,37 @@ if ($action == "approve") {
 		 */
 
 
-				$mail = new PHPMailer(true);
+      $mail = new PHPMailer(true);
 
-                                try {
-                                    // Specify the SMTP settings.
-                                    $mail->isSMTP();
-                                    $mail->setFrom($opt["email_from"], "PHP Gift Registry");
-				                                        $mail->Username   = $opt["ses_email_username"];
-                                    $mail->Password   = $opt["ses_email_password"];
+      try {
+          // Specify the SMTP settings.
+          $mail->isSMTP();
+          $mail->setFrom($opt["email_from"], "PHP Gift Registry");
+                      $mail->Username   = $opt["ses_email_username"];
+          $mail->Password   = $opt["ses_email_password"];
 
-                                    $mail->Host       = "email-smtp.us-east-1.amazonaws.com";
-                                    $mail->Port       = 587;
-                                    $mail->SMTPAuth   = true;
-                                    $mail->SMTPSecure = 'tls';
-                                    //$mail->addCustomHeader('X-SES-CONFIGURATION-SET', $configurationSet);
+          $mail->Host       = "email-smtp.us-east-1.amazonaws.com";
+          $mail->Port       = 587;
+          $mail->SMTPAuth   = true;
+          $mail->SMTPSecure = 'tls';
+          //$mail->addCustomHeader('X-SES-CONFIGURATION-SET', $configurationSet);
 
-                                    // Specify the message recipients.
-                                    $mail->addAddress($row["email"]);
-                                    // You can also add CC, BCC, and additional To recipients here.
+          // Specify the message recipients.
+          $mail->addAddress($row["email"]);
+          // You can also add CC, BCC, and additional To recipients here.
 
-                                    // Specify the content of the message.
-                                    $mail->isHTML(false);
-                                    $mail->Subject    = "PHP Gift Registry: Account Approved";
-                                    $mail->Body       = "Your username is '" . $row["username"] . "' and your new password is '$pwd'.";
-                                    //$mail->AltBody    = "test alt body";
-                                    $mail->Send();
-                                    //echo "Email sent!" , PHP_EOL;
-                                } catch (phpmailerException $e) {
-                                    echo "An error occurred. {$e->errorMessage()}", PHP_EOL; //Catch errors from PHPMailer.
-                                } catch (Exception $e) {
-                                    echo "Email not sent. {$mail->ErrorInfo}", PHP_EOL; //Catch errors from Amazon SES.
-                                }
+          // Specify the content of the message.
+          $mail->isHTML(false);
+          $mail->Subject    = "PHP Gift Registry: Account Approved";
+          $mail->Body       = "Your username is '" . $row["username"] . "' and your new password is '$pwd'.";
+          //$mail->AltBody    = "test alt body";
+          $mail->Send();
+          //echo "Email sent!" , PHP_EOL;
+      } catch (phpmailerException $e) {
+          echo "An error occurred. {$e->errorMessage()}", PHP_EOL; //Catch errors from PHPMailer.
+      } catch (Exception $e) {
+          echo "Email not sent. {$mail->ErrorInfo}", PHP_EOL; //Catch errors from Amazon SES.
+      }
 
 
 	}
@@ -121,37 +121,37 @@ else if ($action == "reject") {
 			"From: {$opt["email_from"]}\r\nReply-To: {$opt["email_reply_to"]}\r\nX-Mailer: {$opt["email_xmailer"]}\r\n"
 		) or die("Mail not accepted for " . $row["email"]);	
 		 */
-				$mail = new PHPMailer(true);
+      $mail = new PHPMailer(true);
 
-                                try {
-                                    // Specify the SMTP settings.
-                                    $mail->isSMTP();
-				    $mail->setFrom($opt["email_from"], "PHP Gift Registry");
-				                                        $mail->Username   = $opt["ses_email_username"];
-                                    $mail->Password   = $opt["ses_email_password"];
+      try {
+        // Specify the SMTP settings.
+        $mail->isSMTP();
+        $mail->setFrom($opt["email_from"], "PHP Gift Registry");
+        $mail->Username   = $opt["ses_email_username"];
+        $mail->Password   = $opt["ses_email_password"];
 
-                                    $mail->Host       = "email-smtp.us-east-1.amazonaws.com";
-                                    $mail->Port       = 587;
-                                    $mail->SMTPAuth   = true;
-                                    $mail->SMTPSecure = 'tls';
-                                    //$mail->addCustomHeader('X-SES-CONFIGURATION-SET', $configurationSet);
+        $mail->Host       = "email-smtp.us-east-1.amazonaws.com";
+        $mail->Port       = 587;
+        $mail->SMTPAuth   = true;
+        $mail->SMTPSecure = 'tls';
+        //$mail->addCustomHeader('X-SES-CONFIGURATION-SET', $configurationSet);
 
-                                    // Specify the message recipients.
-                                    $mail->addAddress($row["email"]);
-                                    // You can also add CC, BCC, and additional To recipients here.
+        // Specify the message recipients.
+        $mail->addAddress($row["email"]);
+        // You can also add CC, BCC, and additional To recipients here.
 
-                                    // Specify the content of the message.
-                                    $mail->isHTML(false);
-                                    $mail->Subject    = "PHP Gift Registry: Account Denied";
-                                    $mail->Body       = "Your Gift Registry application was denied by " . $_SESSION["fullname"] . ".";
-                                    //$mail->AltBody    = "test alt body";
-                                    $mail->Send();
-                                    //echo "Email sent!" , PHP_EOL;
-                                } catch (phpmailerException $e) {
-                                    echo "An error occurred. {$e->errorMessage()}", PHP_EOL; //Catch errors from PHPMailer.
-                                } catch (Exception $e) {
-                                    echo "Email not sent. {$mail->ErrorInfo}", PHP_EOL; //Catch errors from Amazon SES.
-                                }
+        // Specify the content of the message.
+        $mail->isHTML(false);
+        $mail->Subject    = "PHP Gift Registry: Account Denied";
+        $mail->Body       = "Your Gift Registry application was denied by " . $_SESSION["fullname"] . ".";
+        //$mail->AltBody    = "test alt body";
+        $mail->Send();
+        //echo "Email sent!" , PHP_EOL;
+    } catch (phpmailerException $e) {
+        echo "An error occurred. {$e->errorMessage()}", PHP_EOL; //Catch errors from PHPMailer.
+    } catch (Exception $e) {
+        echo "Email not sent. {$mail->ErrorInfo}", PHP_EOL; //Catch errors from Amazon SES.
+    }
 
 	}
 
