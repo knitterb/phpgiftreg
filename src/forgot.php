@@ -47,16 +47,15 @@ if (isset($_POST["action"]) && $_POST["action"] == "forgot") {
 				$stmt->bindParam(2, $username, PDO::PARAM_STR);
 
 				$stmt->execute();
-				/*
-				mail(
+				if ($opt[ses_email_server]=="") {
+					mail(
 					$email,
 					"Gift Registry password reset",
 					"Your Gift Registry account information:\r\n" . 
 						"Your username is '" . $username . "' and your new password is '$pwd'.",
 					"From: {$opt["email_from"]}\r\nReply-To: {$opt["email_reply_to"]}\r\nX-Mailer: {$opt["email_xmailer"]}\r\n"
 				) or die("Mail not accepted for $email");
-				 */
-				
+} else {				
 				$mail = new PHPMailer(true);
 
 				try {
@@ -65,7 +64,7 @@ if (isset($_POST["action"]) && $_POST["action"] == "forgot") {
 				    $mail->setFrom($opt["email_from"], "PHP Gift Registry");
 				    $mail->Username   = $opt["ses_email_username"];
 				    $mail->Password   = $opt["ses_email_password"];
-				    $mail->Host       = "email-smtp.us-east-1.amazonaws.com";
+						$mail->Host       = $opt[ses_email_server];
 				    $mail->Port       = 587;
 				    $mail->SMTPAuth   = true;
 				    $mail->SMTPSecure = 'tls';
@@ -88,7 +87,7 @@ if (isset($_POST["action"]) && $_POST["action"] == "forgot") {
 				    echo "Email not sent. {$mail->ErrorInfo}", PHP_EOL; //Catch errors from Amazon SES.
 				}
 
-
+			}
 
 			}
 		}

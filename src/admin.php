@@ -59,7 +59,8 @@ if ($action == "approve") {
 	$stmt->bindValue(1, (int) $_GET["userid"], PDO::PARAM_INT);
 	$stmt->execute();
 	if ($row = $stmt->fetch()) {
-		/*
+
+    if ($opt[ses_email_server]=="") {
 		mail(
 			$row["email"],
 			"Gift Registry application approved",
@@ -67,9 +68,9 @@ if ($action == "approve") {
 				"Your username is " . $row["username"] . " and your password is $pwd.",
 			"From: {$opt["email_from"]}\r\nReply-To: {$opt["email_reply_to"]}\r\nX-Mailer: {$opt["email_xmailer"]}\r\n"
 		) or die("Mail not accepted for " . $row["email"]);	
-		 */
 
-
+  } else {
+    
       $mail = new PHPMailer(true);
 
       try {
@@ -78,8 +79,7 @@ if ($action == "approve") {
           $mail->setFrom($opt["email_from"], "PHP Gift Registry");
                       $mail->Username   = $opt["ses_email_username"];
           $mail->Password   = $opt["ses_email_password"];
-
-          $mail->Host       = "email-smtp.us-east-1.amazonaws.com";
+          $mail->Host       = $opt[ses_email_server];
           $mail->Port       = 587;
           $mail->SMTPAuth   = true;
           $mail->SMTPSecure = 'tls';
@@ -101,7 +101,7 @@ if ($action == "approve") {
       } catch (Exception $e) {
           echo "Email not sent. {$mail->ErrorInfo}", PHP_EOL; //Catch errors from Amazon SES.
       }
-
+  }
 
 	}
 	header("Location: " . getFullPath("index.php"));
@@ -113,14 +113,15 @@ else if ($action == "reject") {
 	$stmt->bindValue(1, (int) $_GET["userid"], PDO::PARAM_INT);
 	$stmt->execute();
 	if ($row = $stmt->fetch()) {
-		/*
-		mail(
+
+    if ($opt[ses_email_server]=="") {
+      mail(
 			$row["email"],
 			"Gift Registry application denied",
 			"Your Gift Registry application was denied by " . $_SESSION["fullname"] . ".",
 			"From: {$opt["email_from"]}\r\nReply-To: {$opt["email_reply_to"]}\r\nX-Mailer: {$opt["email_xmailer"]}\r\n"
 		) or die("Mail not accepted for " . $row["email"]);	
-		 */
+      } else {
       $mail = new PHPMailer(true);
 
       try {
@@ -130,7 +131,7 @@ else if ($action == "reject") {
         $mail->Username   = $opt["ses_email_username"];
         $mail->Password   = $opt["ses_email_password"];
 
-        $mail->Host       = "email-smtp.us-east-1.amazonaws.com";
+        $mail->Host       = $opt[ses_email_server];
         $mail->Port       = 587;
         $mail->SMTPAuth   = true;
         $mail->SMTPSecure = 'tls';
@@ -152,7 +153,7 @@ else if ($action == "reject") {
     } catch (Exception $e) {
         echo "Email not sent. {$mail->ErrorInfo}", PHP_EOL; //Catch errors from Amazon SES.
     }
-
+  }
 	}
 
 	$stmt = $smarty->dbh()->prepare("DELETE FROM {$opt["table_prefix"]}users WHERE userid = ?");

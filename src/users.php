@@ -140,7 +140,8 @@ else if ($action == "insert") {
 		$stmt->bindParam(7, $userisadmin, PDO::PARAM_BOOL);
 		$stmt->execute();
 
-		/*
+		if ($opt[ses_email_server]=="") {
+
 		mail(
 			$email,
 			"Gift Registry account created",
@@ -148,8 +149,8 @@ else if ($action == "insert") {
 				"Your username is $username and your password is $pwd.",
 			"From: {$opt["email_from"]}\r\nReply-To: {$opt["email_reply_to"]}\r\nX-Mailer: {$opt["email_xmailer"]}\r\n"
 		) or die("Mail not accepted for $email");	
-		*/
 
+		} else {
 		$mail = new PHPMailer(true);
 
 		try {
@@ -158,8 +159,8 @@ else if ($action == "insert") {
 		    $mail->setFrom($opt["email_from"], "PHP Gift Registry");
 			$mail->Username   = $opt["ses_email_username"];
 			$mail->Password   = $opt["ses_email_password"];
-		    $mail->Host       = "email-smtp.us-east-1.amazonaws.com";
-		    $mail->Port       = 587;
+			$mail->Host       = $opt[ses_email_server];
+			$mail->Port       = 587;
 		    $mail->SMTPAuth   = true;
 		    $mail->SMTPSecure = 'tls';
 		    //$mail->addCustomHeader('X-SES-CONFIGURATION-SET', $configurationSet);
@@ -180,7 +181,7 @@ else if ($action == "insert") {
 		} catch (Exception $e) {
 		    echo "Email not sent. {$mail->ErrorInfo}", PHP_EOL; //Catch errors from Amazon SES.
 		}
-
+	}
 
 
 		header("Location: " . getFullPath("users.php?message=User+added+and+e-mail+sent."));
@@ -219,15 +220,14 @@ else if ($action == "reset") {
 	$stmt->bindParam(1, $pwd, PDO::PARAM_STR);
 	$stmt->bindParam(2, $resetuserid, PDO::PARAM_INT);
 	$stmt->execute();
-	/*
-	 mail(
+	if ($opt[ses_email_server]=="") {
+		mail(
 		$resetemail,
 		"Gift Registry password reset",
 		"Your Gift Registry password was reset to $pwd.",
 		"From: {$opt["email_from"]}\r\nReply-To: {$opt["email_reply_to"]}\r\nX-Mailer: {$opt["email_xmailer"]}\r\n"
 	) or die("Mail not accepted for $email");
-	*/
-
+			} else {
 	$mail = new PHPMailer(true);
 
 	try {
@@ -237,8 +237,8 @@ else if ($action == "reset") {
 	                                        $mail->Username   = $opt["ses_email_username"];
                                     $mail->Password   = $opt["ses_email_password"];
 
-	    $mail->Host       = "email-smtp.us-east-1.amazonaws.com";
-	    $mail->Port       = 587;
+																		$mail->Host       = $opt[ses_email_server];
+																		$mail->Port       = 587;
 	    $mail->SMTPAuth   = true;
 	    $mail->SMTPSecure = 'tls';
 	    //$mail->addCustomHeader('X-SES-CONFIGURATION-SET', $configurationSet);
@@ -260,7 +260,7 @@ else if ($action == "reset") {
 	    echo "Email not sent. {$mail->ErrorInfo}", PHP_EOL; //Catch errors from Amazon SES.
 	}
 
-
+			}
 	header("Location: " . getFullPath("users.php?message=Password+reset."));
 	exit;
 }
