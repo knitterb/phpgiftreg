@@ -140,7 +140,7 @@ else if ($action == "insert") {
 		$stmt->bindParam(7, $userisadmin, PDO::PARAM_BOOL);
 		$stmt->execute();
 
-		if ($opt[ses_email_server]=="") {
+		if ($opt["ses_email_server"]=="") {
 
 		mail(
 			$email,
@@ -159,7 +159,7 @@ else if ($action == "insert") {
 		    $mail->setFrom($opt["email_from"], "PHP Gift Registry");
 			$mail->Username   = $opt["ses_email_username"];
 			$mail->Password   = $opt["ses_email_password"];
-			$mail->Host       = $opt[ses_email_server];
+			$mail->Host       = $opt["ses_email_server"];
 			$mail->Port       = 587;
 		    $mail->SMTPAuth   = true;
 		    $mail->SMTPSecure = 'tls';
@@ -220,7 +220,7 @@ else if ($action == "reset") {
 	$stmt->bindParam(1, $pwd, PDO::PARAM_STR);
 	$stmt->bindParam(2, $resetuserid, PDO::PARAM_INT);
 	$stmt->execute();
-	if ($opt[ses_email_server]=="") {
+	if ($opt["ses_email_server"]=="") {
 		mail(
 		$resetemail,
 		"Gift Registry password reset",
@@ -237,7 +237,7 @@ else if ($action == "reset") {
 	                                        $mail->Username   = $opt["ses_email_username"];
                                     $mail->Password   = $opt["ses_email_password"];
 
-																		$mail->Host       = $opt[ses_email_server];
+																		$mail->Host       = $opt["ses_email_server"];
 																		$mail->Port       = 587;
 	    $mail->SMTPAuth   = true;
 	    $mail->SMTPSecure = 'tls';
