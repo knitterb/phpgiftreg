@@ -132,7 +132,14 @@ function getGlobalOptions() {
 		/* The number of minutes in between subscription notifications so the subscribers
 			don't get flooded with updates.
 		*/
-		"notify_threshold_minutes" => 60
+		"notify_threshold_minutes" => 60,
+
+		"ses_email_username" => "",
+		"ses_email_password" => "",
+		"email_from" => "email@example.com",
+
+
+
 	);
 }
 ?>
