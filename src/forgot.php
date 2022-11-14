@@ -47,7 +47,7 @@ if (isset($_POST["action"]) && $_POST["action"] == "forgot") {
 				$stmt->bindParam(2, $username, PDO::PARAM_STR);
 
 				$stmt->execute();
-				if ($opt[ses_email_server]=="") {
+				if ($opt["ses_email_server"]=="") {
 					mail(
 					$email,
 					"Gift Registry password reset",
@@ -64,7 +64,7 @@ if (isset($_POST["action"]) && $_POST["action"] == "forgot") {
 				    $mail->setFrom($opt["email_from"], "PHP Gift Registry");
 				    $mail->Username   = $opt["ses_email_username"];
 				    $mail->Password   = $opt["ses_email_password"];
-						$mail->Host       = $opt[ses_email_server];
+						$mail->Host       = $opt["ses_email_server"];
 				    $mail->Port       = 587;
 				    $mail->SMTPAuth   = true;
 				    $mail->SMTPSecure = 'tls';
