@@ -76,6 +76,7 @@ CREATE TABLE `items` (
   `comment` text,
   `quantity` int(11) NOT NULL default '0',
   `image_filename` varchar(255) default NULL,
+  `hidden` boolean default false,
   PRIMARY KEY  (`itemid`)
 );
 
