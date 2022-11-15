@@ -229,6 +229,14 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 							</div>
 						</div>
 					{/if}
+					{if $opt.allow_hidden}
+						<div class="control-group">
+							<label class="control-label" for="hidden">Hidden</label>
+							<div class="controls">
+								<input type="checkbox" name="hidden" {if $hidden == "1"}checked="checked"{/if}>
+							</div>
+						</div>
+					{/if}
 					<div class="control-group">
 						<label class="control-label" for="comment">Comment</label>
 						<div class="controls">

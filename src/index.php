@@ -135,7 +135,7 @@ else {
 			$sortby = "rankorder DESC, i.description";
 	}
 }
-$stmt = $smarty->dbh()->prepare("SELECT itemid, description, c.category, price, url, rendered, comment, image_filename FROM {$opt["table_prefix"]}items i LEFT OUTER JOIN {$opt["table_prefix"]}categories c ON c.categoryid = i.category LEFT OUTER JOIN {$opt["table_prefix"]}ranks r ON r.ranking = i.ranking WHERE userid = ? ORDER BY " . $sortby);
+$stmt = $smarty->dbh()->prepare("SELECT itemid, description, c.category, price, url, rendered, comment, image_filename, hidden FROM {$opt["table_prefix"]}items i LEFT OUTER JOIN {$opt["table_prefix"]}categories c ON c.categoryid = i.category LEFT OUTER JOIN {$opt["table_prefix"]}ranks r ON r.ranking = i.ranking WHERE userid = ? ORDER BY " . $sortby);
 $stmt->bindParam(1, $userid, PDO::PARAM_INT);
 $stmt->execute();
 $myitems_count = 0;
@@ -159,7 +159,7 @@ $stmt = $smarty->dbh()->prepare("SELECT u.userid, u.fullname, u.comment, u.list_
 			"LEFT OUTER JOIN {$opt["table_prefix"]}items i ON u.userid = i.userid " .
 			"LEFT OUTER JOIN {$opt["table_prefix"]}subscriptions sub ON sub.publisher = u.userid AND sub.subscriber = ? " .
 			"WHERE s.shopper = ? " .
-				"AND pending = 0 " .
+				"AND pending = 0 AND i.hidden = 0 " .
 			"GROUP BY u.userid, u.fullname, u.list_stamp " .
 			"ORDER BY u.fullname");
 $stmt->bindParam(1, $userid, PDO::PARAM_INT);

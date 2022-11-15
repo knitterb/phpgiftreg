@@ -103,7 +103,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 					<tr valign="top">
 						<td>
 							{$row.description|escape:'htmlall'}
-							 {if $row.comment != ''}
+							{if $row.comment != ''}
 								<a class="btn btn-small" rel="popover" href="#" data-placement="right" data-original-title="Comment" data-content="{$row.comment|escape:'htmlall'}">...</a>
 							{/if}
 							{if $row.url != ''}
@@ -120,6 +120,10 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 							<a href="receive.php?itemid={$row.itemid}"><img alt="Mark Item Received" src="images/return.png" border="0" title="Mark Item Received" /></a>&nbsp;
 							<a href="item.php?action=edit&itemid={$row.itemid}"><img alt="Edit Item" src="images/pencil.png" border="0" title="Edit Item" /></a>&nbsp;
 							<a rel="confirmitemdelete" data-content="{$row.description|escape:'htmlall'}" href="item.php?action=delete&itemid={$row.itemid}"><img alt="Delete Item" src="images/bin.png" border="0" alt="Delete" title="Delete Item" /></a>
+							{if $row.hidden}
+								&nbsp;
+								<img alt="Item Hidden" src="images/eye-slash.png" border="0" title="Item is hidden" />
+							{/if}
 						</td>
 					</tr>
 				{/foreach}

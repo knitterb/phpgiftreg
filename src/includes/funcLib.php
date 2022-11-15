@@ -12,6 +12,13 @@
 // You should have received a copy of the GNU General Public License
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+use PHPMailer\PHPMailer\PHPMailer;
+use PHPMailer\PHPMailer\SMTP;
+use PHPMailer\PHPMailer\Exception;
+
+require 'phpmailer/Exception.php';
+require 'phpmailer/SMTP.php';
+require 'phpmailer/PHPMailer.php';
 
 function getFullPath($url) {
 	$fp = $_SERVER["SERVER_PORT"] == "443" ? "https://" : "http://";
@@ -140,12 +147,52 @@ function sendMessage($sender, $recipient, $message, $dbh, $opt) {
 	$stmt->execute();
 	if ($row = $stmt->fetch()) {
 		if ($row["email_msgs"] == 1) {
-			mail(
-				$row["remail"],
-				"Gift Registry message from " . $row["fullname"],
-				$row["fullname"] . " <" . $row["semail"] . "> sends:\r\n" . $message,
-				"From: {$opt["email_from"]}\r\nReply-To: " . $row["semail"] . "\r\nX-Mailer: {$opt["email_xmailer"]}\r\n"
-			) or die("Mail not accepted for " . $row["remail"]);
+
+
+			if ($opt["ses_email_server"]=="") {
+
+				mail(
+					$row["remail"],
+					"Gift Registry message from " . $row["fullname"],
+					$row["fullname"] . " <" . $row["semail"] . "> sends:\r\n" . $message,
+					"From: {$opt["email_from"]}\r\nReply-To: " . $row["semail"] . "\r\nX-Mailer: {$opt["email_xmailer"]}\r\n"
+				) or die("Mail not accepted for " . $row["remail"]);
+			} else {				
+			$mail = new PHPMailer(true);
+
+			try {
+					// Specify the SMTP settings.
+					$mail->isSMTP();
+					$mail->setFrom($opt["email_from"], "PHP Gift Registry");
+					$mail->Username   = $opt["ses_email_username"];
+					$mail->Password   = $opt["ses_email_password"];
+					$mail->Host       = $opt["ses_email_server"];
+					$mail->Port       = 587;
+					$mail->SMTPAuth   = true;
+					$mail->SMTPSecure = 'tls';
+					//$mail->addCustomHeader('X-SES-CONFIGURATION-SET', $configurationSet);
+
+					// Specify the message recipients.
+					$mail->addAddress($email);
+					// You can also add CC, BCC, and additional To recipients here.
+
+					// Specify the content of the message.
+					$mail->isHTML(false);
+					$mail->Subject    = "PHP Gift Registry: New Messages";
+					$mail->Body       = $row["fullname"] . " <" . $row["semail"] . "> sends:\r\n" . $message;
+					//$mail->AltBody    = "test alt body";
+					$mail->Send();
+					//echo "Email sent!" , PHP_EOL;
+			} catch (phpmailerException $e) {
+					echo "An error occurred. {$e->errorMessage()}", PHP_EOL; //Catch errors from PHPMailer.
+			} catch (Exception $e) {
+					echo "Email not sent. {$mail->ErrorInfo}", PHP_EOL; //Catch errors from Amazon SES.
+			}
+
+		}
+
+
+
 		}
 	}
 	else {
