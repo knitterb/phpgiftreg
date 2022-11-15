@@ -23,8 +23,7 @@ session_start();
 if (!isset($_SESSION["userid"])) {
 	header("Location: " . getFullPath("login.php"));
 	exit;
-}
-else {
+} else {
 	$userid = $_SESSION["userid"];
 }
 
@@ -36,11 +35,9 @@ if (!empty($_GET["message"])) {
 if (isset($_GET["offset"])) {
 	$_SESSION["offset"] = $_GET["offset"];
 	$offset = $_GET["offset"];
-}
-else if (isset($_SESSION["offset"])) {
+} else if (isset($_SESSION["offset"])) {
 	$offset = $_SESSION["offset"];
-}
-else {
+} else {
 	$offset = 0;
 }
 
@@ -50,39 +47,34 @@ if (!empty($_GET["action"])) {
 		$stmt = $smarty->dbh()->prepare("UPDATE {$opt["table_prefix"]}messages SET isread = 1 WHERE messageid = ?");
 		$stmt->bindValue(1, (int) $_GET["messageid"], PDO::PARAM_INT);
 		$stmt->execute();
-	}
-	else if ($action == "approve") {
+	} else if ($action == "approve") {
 		$stmt = $smarty->dbh()->prepare("UPDATE {$opt["table_prefix"]}shoppers SET pending = 0 WHERE shopper = ? AND mayshopfor = ?");
 		$stmt->bindValue(1, (int) $_GET["shopper"], PDO::PARAM_INT);
 		$stmt->bindParam(2, $userid, PDO::PARAM_INT);
 		$stmt->execute();
-		sendMessage($userid,(int) $_GET["shopper"],$_SESSION["fullname"] . " has approved your request to shop for him/her.", $smarty->dbh(), $smarty->opt());
-	}
-	else if ($action == "decline") {
-		$stmt = $smarty->dbh()->prepare("DELETE FROM {$opt["table_prefix"]}shoppers WHERE shopper = ? AND mayshopfor = ?"); 
+		sendMessage($userid, (int) $_GET["shopper"], $_SESSION["fullname"] . " has approved your request to shop for him/her.", $smarty->dbh(), $smarty->opt());
+	} else if ($action == "decline") {
+		$stmt = $smarty->dbh()->prepare("DELETE FROM {$opt["table_prefix"]}shoppers WHERE shopper = ? AND mayshopfor = ?");
 		$stmt->bindValue(1, (int) $_GET["shopper"], PDO::PARAM_INT);
 		$stmt->bindParam(2, $userid, PDO::PARAM_INT);
 		$stmt->execute();
-		sendMessage($userid,(int) $_GET["shopper"],$_SESSION["fullname"] . " has declined your request to shop for him/her.", $smarty->dbh(), $smarty->opt());
-	}
-	else if ($action == "request") {
+		sendMessage($userid, (int) $_GET["shopper"], $_SESSION["fullname"] . " has declined your request to shop for him/her.", $smarty->dbh(), $smarty->opt());
+	} else if ($action == "request") {
 		$stmt = $smarty->dbh()->prepare("INSERT INTO {$opt["table_prefix"]}shoppers(shopper,mayshopfor,pending) VALUES(?, ?, ?)");
 		$stmt->bindParam(1, $userid, PDO::PARAM_INT);
 		$stmt->bindValue(2, (int) $_GET["shopfor"], PDO::PARAM_INT);
 		$stmt->bindValue(3, $opt["shop_requires_approval"], PDO::PARAM_BOOL);
 		$stmt->execute();
 		if ($opt["shop_requires_approval"]) {
-			sendMessage($userid,(int) $_GET["shopfor"],$_SESSION["fullname"] . " has requested to shop for you.  Please approve or decline this request.", $smarty->dbh(), $smarty->opt());
+			sendMessage($userid, (int) $_GET["shopfor"], $_SESSION["fullname"] . " has requested to shop for you.  Please approve or decline this request.", $smarty->dbh(), $smarty->opt());
 		}
-	}
-	else if ($action == "cancel") {
+	} else if ($action == "cancel") {
 		// this works for either cancelling a request or "unshopping" for a user.
 		$stmt = $smarty->dbh()->prepare("DELETE FROM {$opt["table_prefix"]}shoppers WHERE shopper = ? AND mayshopfor = ?");
 		$stmt->bindParam(1, $userid, PDO::PARAM_INT);
 		$stmt->bindValue(2, (int) $_GET["shopfor"], PDO::PARAM_INT);
 		$stmt->execute();
-	}
-	else if ($action == "subscribe") {
+	} else if ($action == "subscribe") {
 		// ensure the current user can shop for that user first.
 		$stmt = $smarty->dbh()->prepare("SELECT pending FROM {$opt["table_prefix"]}shoppers WHERE shopper = ? AND mayshopfor = ?");
 		$stmt->bindParam(1, $userid, PDO::PARAM_INT);
@@ -92,8 +84,7 @@ if (!empty($_GET["action"])) {
 			if ($row["pending"]) {
 				die("You aren't allowed to shop for that user yet.");
 			}
-		}
-		else {
+		} else {
 			die("You aren't allowed to shop for that user.");
 		}
 
@@ -101,8 +92,7 @@ if (!empty($_GET["action"])) {
 		$stmt->bindValue(1, (int) $_GET["shoppee"], PDO::PARAM_INT);
 		$stmt->bindParam(2, $userid, PDO::PARAM_INT);
 		$stmt->execute();
-	}
-	else if ($action == "unsubscribe") {
+	} else if ($action == "unsubscribe") {
 		$stmt = $smarty->dbh()->prepare("DELETE FROM {$opt["table_prefix"]}subscriptions WHERE publisher = ? AND subscriber = ?");
 		$stmt->bindValue(1, (int) $_GET["shoppee"], PDO::PARAM_INT);
 		$stmt->bindParam(2, $userid, PDO::PARAM_INT);
@@ -112,12 +102,11 @@ if (!empty($_GET["action"])) {
 
 if (!empty($_GET["mysort"]))
 	$_SESSION["mysort"] = $_GET["mysort"];
-	
+
 if (!isset($_SESSION["mysort"])) {
 	$sortby = "rankorder DESC, i.description";
 	$_SESSION["mysort"] = "ranking";
-}
-else {
+} else {
 	switch ($_SESSION["mysort"]) {
 		case "ranking":
 			$sortby = "rankorder DESC, i.description";
@@ -154,14 +143,14 @@ while ($stmt->fetch()) {
 }
 
 $stmt = $smarty->dbh()->prepare("SELECT u.userid, u.fullname, u.comment, u.list_stamp, ISNULL(sub.subscriber) AS is_unsubscribed, COUNT(i.itemid) AS itemcount " .
-			"FROM {$opt["table_prefix"]}shoppers s " .
-			"INNER JOIN {$opt["table_prefix"]}users u ON u.userid = s.mayshopfor " .
-			"LEFT OUTER JOIN {$opt["table_prefix"]}items i ON u.userid = i.userid " .
-			"LEFT OUTER JOIN {$opt["table_prefix"]}subscriptions sub ON sub.publisher = u.userid AND sub.subscriber = ? " .
-			"WHERE s.shopper = ? " .
-				"AND pending = 0 AND i.hidden = 0 " .
-			"GROUP BY u.userid, u.fullname, u.list_stamp " .
-			"ORDER BY u.fullname");
+	"FROM {$opt["table_prefix"]}shoppers s " .
+	"INNER JOIN {$opt["table_prefix"]}users u ON u.userid = s.mayshopfor " .
+	"LEFT OUTER JOIN {$opt["table_prefix"]}items i ON u.userid = i.userid " .
+	"LEFT OUTER JOIN {$opt["table_prefix"]}subscriptions sub ON sub.publisher = u.userid AND sub.subscriber = ? " .
+	"WHERE s.shopper = ? " .
+	"AND pending = 0 AND i.hidden = 0 " .
+	"GROUP BY u.userid, u.fullname, u.list_stamp " .
+	"ORDER BY u.fullname");
 $stmt->bindParam(1, $userid, PDO::PARAM_INT);
 $stmt->bindParam(2, $userid, PDO::PARAM_INT);
 $stmt->execute();
@@ -169,8 +158,7 @@ $shoppees = array();
 while ($row = $stmt->fetch()) {
 	if ($row['list_stamp'] == 0) {
 		$row['list_stamp'] = '-';
-	}
-	else {
+	} else {
 		$listStampDate = new DateTime($row['list_stamp']);
 		$row['list_stamp'] = $listStampDate->format($opt["date_format"]);
 	}
@@ -178,17 +166,17 @@ while ($row = $stmt->fetch()) {
 }
 
 $stmt = $smarty->dbh()->prepare("SELECT DISTINCT u.userid, u.fullname, s.pending " .
-			"FROM {$opt["table_prefix"]}memberships mymem " .
-			"INNER JOIN {$opt["table_prefix"]}memberships others " .
-				"ON others.familyid = mymem.familyid AND others.userid <> ? " .
-			"INNER JOIN {$opt["table_prefix"]}users u " .
-				"ON u.userid = others.userid " .
-			"LEFT OUTER JOIN {$opt["table_prefix"]}shoppers s " .
-				"ON s.mayshopfor = others.userid AND s.shopper = ? " .
-			"WHERE mymem.userid = ? " .
-				"AND (s.pending IS NULL OR s.pending = 1) " .
-				"AND u.approved = 1 " .
-			"ORDER BY u.fullname");
+	"FROM {$opt["table_prefix"]}memberships mymem " .
+	"INNER JOIN {$opt["table_prefix"]}memberships others " .
+	"ON others.familyid = mymem.familyid AND others.userid <> ? " .
+	"INNER JOIN {$opt["table_prefix"]}users u " .
+	"ON u.userid = others.userid " .
+	"LEFT OUTER JOIN {$opt["table_prefix"]}shoppers s " .
+	"ON s.mayshopfor = others.userid AND s.shopper = ? " .
+	"WHERE mymem.userid = ? " .
+	"AND (s.pending IS NULL OR s.pending = 1) " .
+	"AND u.approved = 1 " .
+	"ORDER BY u.fullname");
 $stmt->bindParam(1, $userid, PDO::PARAM_INT);
 $stmt->bindParam(2, $userid, PDO::PARAM_INT);
 $stmt->bindParam(3, $userid, PDO::PARAM_INT);
@@ -197,13 +185,13 @@ $prospects = array();
 while ($row = $stmt->fetch()) {
 	$prospects[] = $row;
 }
-					
+
 $stmt = $smarty->dbh()->prepare("SELECT messageid, u.fullname, message, created " .
-			"FROM {$opt["table_prefix"]}messages m " .
-			"INNER JOIN {$opt["table_prefix"]}users u ON u.userid = m.sender " .
-			"WHERE m.recipient = ? " .
-				"AND m.isread = 0 " .
-			"ORDER BY created DESC");
+	"FROM {$opt["table_prefix"]}messages m " .
+	"INNER JOIN {$opt["table_prefix"]}users u ON u.userid = m.sender " .
+	"WHERE m.recipient = ? " .
+	"AND m.isread = 0 " .
+	"ORDER BY created DESC");
 $stmt->bindParam(1, $userid, PDO::PARAM_INT);
 $stmt->execute();
 $messages = array();
@@ -214,15 +202,15 @@ while ($row = $stmt->fetch()) {
 }
 
 $query = "SELECT CONCAT(YEAR(CURDATE()),'-',MONTH(eventdate),'-',DAYOFMONTH(eventdate)) AS DateThisYear, " .
-				"TO_DAYS(CONCAT(YEAR(CURDATE()),'-',MONTH(eventdate),'-',DAYOFMONTH(eventdate))) AS ToDaysDateThisYear, " .
-				"CONCAT(YEAR(CURDATE()) + 1,'-',MONTH(eventdate),'-',DAYOFMONTH(eventdate)) AS DateNextYear, " .
-				"TO_DAYS(CONCAT(YEAR(CURDATE()) + 1,'-',MONTH(eventdate),'-',DAYOFMONTH(eventdate))) AS ToDaysDateNextYear, " .
-				"TO_DAYS(CURDATE()) AS ToDaysToday, " .
-				"TO_DAYS(eventdate) AS ToDaysEventDate, " .
-				"e.userid, u.fullname, description, eventdate, recurring, s.pending " .
-			"FROM {$opt["table_prefix"]}events e " .
-			"LEFT OUTER JOIN {$opt["table_prefix"]}users u ON u.userid = e.userid " .
-			"LEFT OUTER JOIN {$opt["table_prefix"]}shoppers s ON s.mayshopfor = e.userid AND s.shopper = ? ";
+	"TO_DAYS(CONCAT(YEAR(CURDATE()),'-',MONTH(eventdate),'-',DAYOFMONTH(eventdate))) AS ToDaysDateThisYear, " .
+	"CONCAT(YEAR(CURDATE()) + 1,'-',MONTH(eventdate),'-',DAYOFMONTH(eventdate)) AS DateNextYear, " .
+	"TO_DAYS(CONCAT(YEAR(CURDATE()) + 1,'-',MONTH(eventdate),'-',DAYOFMONTH(eventdate))) AS ToDaysDateNextYear, " .
+	"TO_DAYS(CURDATE()) AS ToDaysToday, " .
+	"TO_DAYS(eventdate) AS ToDaysEventDate, " .
+	"e.userid, u.fullname, description, eventdate, recurring, s.pending " .
+	"FROM {$opt["table_prefix"]}events e " .
+	"LEFT OUTER JOIN {$opt["table_prefix"]}users u ON u.userid = e.userid " .
+	"LEFT OUTER JOIN {$opt["table_prefix"]}shoppers s ON s.mayshopfor = e.userid AND s.shopper = ? ";
 if ($opt["show_own_events"])
 	$query .= "WHERE (pending = 0 OR pending IS NULL)";
 else
@@ -240,12 +228,10 @@ while ($row = $stmt->fetch()) {
 	if (!$row["recurring"] && (($row["ToDaysEventDate"] - $row["ToDaysToday"]) >= 0) && (($row["ToDaysEventDate"] - $row["ToDaysToday"]) <= $opt["event_threshold"])) {
 		$days_left = $row["ToDaysEventDate"] - $row["ToDaysToday"];
 		$event_date = new DateTime($row["eventdate"]);
-	}
-	else if ($row["recurring"] && (($row["ToDaysDateThisYear"] - $row["ToDaysToday"]) >= 0) && (($row["ToDaysDateThisYear"] - $row["ToDaysToday"]) <= $opt["event_threshold"])) {
+	} else if ($row["recurring"] && (($row["ToDaysDateThisYear"] - $row["ToDaysToday"]) >= 0) && (($row["ToDaysDateThisYear"] - $row["ToDaysToday"]) <= $opt["event_threshold"])) {
 		$days_left = $row["ToDaysDateThisYear"] - $row["ToDaysToday"];
 		$event_date = new DateTime($row["DateThisYear"]);
-	}
-	else if ($row["recurring"] && (($row["ToDaysDateNextYear"] - $row["ToDaysToday"]) >= 0) && (($row["ToDaysDateNextYear"] - $row["ToDaysToday"]) <= $opt["event_threshold"])) {
+	} else if ($row["recurring"] && (($row["ToDaysDateNextYear"] - $row["ToDaysToday"]) >= 0) && (($row["ToDaysDateNextYear"] - $row["ToDaysToday"]) <= $opt["event_threshold"])) {
 		$days_left = $row["ToDaysDateNextYear"] - $row["ToDaysToday"];
 		$event_date = new DateTime($row["DateNextYear"]);
 	}
@@ -259,25 +245,26 @@ while ($row = $stmt->fetch()) {
 		$events[] = $thisevent;
 	}
 }
-					
-function compareEvents($a, $b) {
+
+function compareEvents($a, $b)
+{
 	if ($a["daysleft"] == $b["daysleft"])
 		return 0;
 	else
 		return ($a["daysleft"] > $b["daysleft"]) ? 1 : -1;
 }
-					
+
 // i couldn't figure out another way to do this, so here goes.
 // sort() wanted to sort based on the array keys, which were 0..n - 1, so that was useless.
 usort($events, "compareEvents");
 
 if ($opt["shop_requires_approval"]) {
 	$query = "SELECT u.userid, u.fullname " .
-				"FROM {$opt["table_prefix"]}shoppers s " .
-				"INNER JOIN {$opt["table_prefix"]}users u ON u.userid = s.shopper " .
-				"WHERE s.mayshopfor = ? " .
-					"AND s.pending = 1 " .
-				"ORDER BY u.fullname";
+		"FROM {$opt["table_prefix"]}shoppers s " .
+		"INNER JOIN {$opt["table_prefix"]}users u ON u.userid = s.shopper " .
+		"WHERE s.mayshopfor = ? " .
+		"AND s.pending = 1 " .
+		"ORDER BY u.fullname";
 	$stmt = $smarty->dbh()->prepare($query);
 	$stmt->bindParam(1, $userid, PDO::PARAM_INT);
 	$stmt->execute();
@@ -289,10 +276,10 @@ if ($opt["shop_requires_approval"]) {
 
 if (($_SESSION["admin"] == 1) && $opt["newuser_requires_approval"]) {
 	$query = "SELECT userid, fullname, email, approved, initialfamilyid, familyname " .
-				"FROM {$opt["table_prefix"]}users u " .
-				"LEFT OUTER JOIN {$opt["table_prefix"]}families f ON f.familyid = u.initialfamilyid " .
-				"WHERE approved = 0 " . 
-				"ORDER BY fullname";
+		"FROM {$opt["table_prefix"]}users u " .
+		"LEFT OUTER JOIN {$opt["table_prefix"]}families f ON f.familyid = u.initialfamilyid " .
+		"WHERE approved = 0 " .
+		"ORDER BY fullname";
 	$stmt = $smarty->dbh()->prepare($query);
 	$stmt->execute();
 	$approval = array();

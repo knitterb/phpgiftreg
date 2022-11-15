@@ -33,11 +33,11 @@ if (isset($_POST["action"]) && $_POST["action"] == "forgot") {
 		// make sure that username is valid 
 		$stmt = $smarty->dbh()->prepare("SELECT email FROM {$opt["table_prefix"]}users WHERE username = ?");
 		$stmt->bindParam(1, $username, PDO::PARAM_STR);
-			
+
 		$stmt->execute();
 		if ($row = $stmt->fetch()) {
 			$email = $row["email"];
-		
+
 			if ($email == "")
 				$error = "The username '" . $username . "' does not have an e-mail address, so the password could not be sent.";
 			else {
@@ -47,51 +47,50 @@ if (isset($_POST["action"]) && $_POST["action"] == "forgot") {
 				$stmt->bindParam(2, $username, PDO::PARAM_STR);
 
 				$stmt->execute();
-				if ($opt["ses_email_server"]=="") {
+				if ($opt["ses_email_server"] == "") {
 					mail(
-					$email,
-					"Gift Registry password reset",
-					"Your Gift Registry account information:\r\n" . 
+						$email,
+						"Gift Registry password reset",
+						"Your Gift Registry account information:\r\n" .
 						"Your username is '" . $username . "' and your new password is '$pwd'.",
-					"From: {$opt["email_from"]}\r\nReply-To: {$opt["email_reply_to"]}\r\nX-Mailer: {$opt["email_xmailer"]}\r\n"
-				) or die("Mail not accepted for $email");
-} else {				
-				$mail = new PHPMailer(true);
+						"From: {$opt["email_from"]}\r\nReply-To: {$opt["email_reply_to"]}\r\nX-Mailer: {$opt["email_xmailer"]}\r\n"
+					) or die("Mail not accepted for $email");
+				} else {
+					$mail = new PHPMailer(true);
 
-				try {
-				    // Specify the SMTP settings.
-				    $mail->isSMTP();
-				    $mail->setFrom($opt["email_from"], "PHP Gift Registry");
-				    $mail->Username   = $opt["ses_email_username"];
-				    $mail->Password   = $opt["ses_email_password"];
-						$mail->Host       = $opt["ses_email_server"];
-				    $mail->Port       = 587;
-				    $mail->SMTPAuth   = true;
-				    $mail->SMTPSecure = 'tls';
-				    //$mail->addCustomHeader('X-SES-CONFIGURATION-SET', $configurationSet);
+					try {
+						// Specify the SMTP settings.
+						$mail->isSMTP();
+						$mail->setFrom($opt["email_from"], "PHP Gift Registry");
+						$mail->Username = $opt["ses_email_username"];
+						$mail->Password = $opt["ses_email_password"];
+						$mail->Host = $opt["ses_email_server"];
+						$mail->Port = 587;
+						$mail->SMTPAuth = true;
+						$mail->SMTPSecure = 'tls';
+						//$mail->addCustomHeader('X-SES-CONFIGURATION-SET', $configurationSet);
 
-				    // Specify the message recipients.
-				    $mail->addAddress($email);
-				    // You can also add CC, BCC, and additional To recipients here.
+						// Specify the message recipients.
+						$mail->addAddress($email);
+						// You can also add CC, BCC, and additional To recipients here.
 
-				    // Specify the content of the message.
-				    $mail->isHTML(false);
-				    $mail->Subject    = "PHP Gift Registry: Forgotten Password";
-				    $mail->Body       = "Your username is '" . $username . "' and your new password is '$pwd'.";
-				    //$mail->AltBody    = "test alt body";
-				    $mail->Send();
-				    //echo "Email sent!" , PHP_EOL;
-				} catch (phpmailerException $e) {
-				    echo "An error occurred. {$e->errorMessage()}", PHP_EOL; //Catch errors from PHPMailer.
-				} catch (Exception $e) {
-				    echo "Email not sent. {$mail->ErrorInfo}", PHP_EOL; //Catch errors from Amazon SES.
+						// Specify the content of the message.
+						$mail->isHTML(false);
+						$mail->Subject = "PHP Gift Registry: Forgotten Password";
+						$mail->Body = "Your username is '" . $username . "' and your new password is '$pwd'.";
+						//$mail->AltBody    = "test alt body";
+						$mail->Send();
+						//echo "Email sent!" , PHP_EOL;
+					} catch (phpmailerException $e) {
+						echo "An error occurred. {$e->errorMessage()}", PHP_EOL; //Catch errors from PHPMailer.
+					} catch (Exception $e) {
+						echo "Email not sent. {$mail->ErrorInfo}", PHP_EOL; //Catch errors from Amazon SES.
+					}
+
 				}
 
 			}
-
-			}
-		}
-		else {
+		} else {
 			$error = "The username '" . $username . "' could not be found.";
 		}
 
@@ -101,12 +100,10 @@ if (isset($_POST["action"]) && $_POST["action"] == "forgot") {
 		$smarty->assign('action', $_POST["action"]);
 		$smarty->assign('username', $username);
 		$smarty->display('forgot.tpl');
-	}
-	catch (PDOException $e) {
+	} catch (PDOException $e) {
 		die("sql exception: " . $e->getMessage());
 	}
-}
-else {
+} else {
 	$smarty->display('forgot.tpl');
 }
 ?>

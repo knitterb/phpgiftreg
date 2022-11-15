@@ -23,15 +23,14 @@ session_start();
 if (!isset($_SESSION["userid"])) {
 	header("Location: " . getFullPath("login.php"));
 	exit;
-}
-else {
+} else {
 	$userid = $_SESSION["userid"];
 }
 
 $action = "";
 if (!empty($_POST["action"])) {
 	$action = $_POST["action"];
-	
+
 	if ($action == "changepwd") {
 		$newpwd = $_POST["newpwd"];
 
@@ -44,12 +43,10 @@ if (!empty($_POST["action"])) {
 
 			header("Location: " . getFullPath("index.php?message=Password+changed."));
 			exit;
-		}
-		catch (PDOException $e) {
+		} catch (PDOException $e) {
 			die("sql exception: " . $e->getMessage());
 		}
-	}
-	else if ($action == "save") {
+	} else if ($action == "save") {
 		$fullname = $_POST["fullname"];
 		$email = $_POST["email"];
 		$comment = $_POST["comment"];
@@ -62,19 +59,17 @@ if (!empty($_POST["action"])) {
 			$stmt->bindParam(3, $email_msgs, PDO::PARAM_BOOL);
 			$stmt->bindParam(4, $comment, PDO::PARAM_STR);
 			$stmt->bindParam(5, $userid, PDO::PARAM_INT);
-		
+
 			$stmt->execute();
 
 			$_SESSION["fullname"] = $fullname;
 
 			header("Location: " . getFullPath("index.php?message=Profile+updated."));
 			exit;
-		}
-		catch (PDOException $e) {
+		} catch (PDOException $e) {
 			die("sql exception: " . $e->getMessage());
 		}
-	}
-	else {
+	} else {
 		die("Unknown verb.");
 	}
 }
@@ -90,12 +85,10 @@ try {
 		$smarty->assign('email_msgs', $row["email_msgs"]);
 		$smarty->assign('comment', $row["comment"]);
 		$smarty->display('profile.tpl');
-	}
-	else {
+	} else {
 		die("You don't exist.");
 	}
-}
-catch (PDOException $e) {
+} catch (PDOException $e) {
 	die("sql exception: " . $e->getMessage());
 }
 ?>

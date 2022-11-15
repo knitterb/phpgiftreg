@@ -22,8 +22,7 @@ session_start();
 if (!isset($_SESSION["userid"])) {
 	header("Location: " . getFullPath("login.php"));
 	exit;
-}
-else {
+} else {
 	$userid = $_SESSION["userid"];
 }
 
@@ -31,8 +30,8 @@ if (empty($_GET["sort"]))
 	$sort = "source";
 else
 	$sort = $_GET["sort"];
-	
-switch($sort) {
+
+switch ($sort) {
 	case "recipient":
 		$sortby = "fullname, source, price";
 		break;
@@ -55,11 +54,11 @@ switch($sort) {
 try {
 	// not worried about sql injection here since $sortby is a function of $sort, which falls through.
 	$stmt = $smarty->dbh()->prepare("SELECT description, source, price, i.comment, a.quantity, a.quantity * i.price AS total, rendered, fullname " .
-				"FROM {$opt["table_prefix"]}items i " .
-				"INNER JOIN {$opt["table_prefix"]}users u ON u.userid = i.userid " .
-				"INNER JOIN {$opt["table_prefix"]}ranks r ON r.ranking = i.ranking " .
-				"INNER JOIN {$opt["table_prefix"]}allocs a ON a.userid = ? AND a.itemid = i.itemid AND bought = 0 " .
-				"ORDER BY " . $sortby);
+		"FROM {$opt["table_prefix"]}items i " .
+		"INNER JOIN {$opt["table_prefix"]}users u ON u.userid = i.userid " .
+		"INNER JOIN {$opt["table_prefix"]}ranks r ON r.ranking = i.ranking " .
+		"INNER JOIN {$opt["table_prefix"]}allocs a ON a.userid = ? AND a.itemid = i.itemid AND bought = 0 " .
+		"ORDER BY " . $sortby);
 	$stmt->bindParam(1, $userid, PDO::PARAM_INT);
 
 	$stmt->execute();
@@ -71,8 +70,7 @@ try {
 		++$itemcount;
 		if ($row["quantity"] == 1) {
 			$row["price"] = formatPrice($row["price"], $opt);
-		}
-		else {
+		} else {
 			$row["price"] = $row["quantity"] . " @ " . formatPrice($row["price"], $opt) . " = " . formatPrice($row["total"], $opt);
 		}
 		$shoplist[] = $row;
@@ -83,8 +81,7 @@ try {
 	$smarty->assign('itemcount', $itemcount);
 	$smarty->assign('userid', $userid);
 	$smarty->display('shoplist.tpl');
-}
-catch (PDOException $e) {
+} catch (PDOException $e) {
 	die("sql exception: " . $e->getMessage());
 }
 ?>

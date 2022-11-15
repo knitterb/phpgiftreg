@@ -22,8 +22,7 @@ session_start();
 if (!isset($_SESSION["userid"])) {
 	header("Location: " . getFullPath("login.php"));
 	exit;
-}
-else {
+} else {
 	$userid = $_SESSION["userid"];
 }
 
@@ -31,8 +30,8 @@ if (empty($_GET["sort"]))
 	$sort = "source";
 else
 	$sort = $_GET["sort"];
-	
-switch($sort) {
+
+switch ($sort) {
 	case "category":
 		$sortby = "category, source, price";
 		break;
@@ -55,12 +54,12 @@ switch($sort) {
 try {
 	// not worried about SQL injection since $sortby is calculated above.
 	$stmt = $smarty->dbh()->prepare("SELECT description, source, price, i.comment, i.quantity, i.quantity * i.price AS total, rendered, c.category " .
-			"FROM {$opt["table_prefix"]}items i " .
-			"INNER JOIN {$opt["table_prefix"]}users u ON u.userid = i.userid " .
-			"INNER JOIN {$opt["table_prefix"]}ranks r ON r.ranking = i.ranking " .
-			"LEFT OUTER JOIN {$opt["table_prefix"]}categories c ON c.categoryid = i.category " .
-			"WHERE u.userid = ? " .
-			"ORDER BY " . $sortby);
+		"FROM {$opt["table_prefix"]}items i " .
+		"INNER JOIN {$opt["table_prefix"]}users u ON u.userid = i.userid " .
+		"INNER JOIN {$opt["table_prefix"]}ranks r ON r.ranking = i.ranking " .
+		"LEFT OUTER JOIN {$opt["table_prefix"]}categories c ON c.categoryid = i.category " .
+		"WHERE u.userid = ? " .
+		"ORDER BY " . $sortby);
 	$stmt->bindParam(1, $userid, PDO::PARAM_INT);
 
 	$stmt->execute();
@@ -82,8 +81,7 @@ try {
 	$smarty->assign('itemcount', $itemcount);
 	$smarty->assign('userid', $userid);
 	$smarty->display('mylist.tpl');
-}
-catch (PDOException $e) {
+} catch (PDOException $e) {
 	die("sql exception: " . $e->getMessage());
 }
 ?>

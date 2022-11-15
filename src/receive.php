@@ -22,8 +22,7 @@ session_start();
 if (!isset($_SESSION["userid"])) {
 	header("Location: " . getFullPath("login.php"));
 	exit;
-}
-else {
+} else {
 	$userid = $_SESSION["userid"];
 }
 
@@ -40,8 +39,7 @@ try {
 			die("That's not your item!");
 
 		$quantity = $row["quantity"];
-	}
-	else {
+	} else {
 		die("Item does not exist.");
 	}
 
@@ -49,7 +47,7 @@ try {
 
 	if ($quantity == 1) {
 		/* just delete the alloc and the item and get out.
-			yes, it's possible the item was RESERVED, not PURCHASED. */
+		yes, it's possible the item was RESERVED, not PURCHASED. */
 		deleteImageForItem($itemid, $smarty->dbh(), $smarty->opt());
 
 		$stmt = $smarty->dbh()->prepare("DELETE FROM {$opt["table_prefix"]}allocs WHERE itemid = ?");
@@ -62,41 +60,39 @@ try {
 
 		header("Location: " . getFullPath("index.php?message=Item+marked+as+received."));
 		exit;
-	}
-	else if ($action == "receive") {
+	} else if ($action == "receive") {
 		// $actual will be a negative number, so let's flip it.
 		$actual = -adjustAllocQuantity($itemid, (int) $_GET["buyer"], 1, -1 * (int) $_GET["quantity"], $smarty->dbh(), $smarty->opt());
-	
+
 		if ($actual < (int) $_GET["quantity"]) {
 			// $userid didn't have that many bought, so some might have been reserved.
-			$actual += -adjustAllocQuantity($itemid,(int) $_GET["buyer"],0,-1 * ((int) $_GET["quantity"] - $actual), $smarty->dbh(), $smarty->opt());
+			$actual += -adjustAllocQuantity($itemid, (int) $_GET["buyer"], 0, -1 * ((int) $_GET["quantity"] - $actual), $smarty->dbh(), $smarty->opt());
 		}
-	
+
 		if ($actual == $quantity) {
 			// now they're all gone.
 			deleteImageForItem($itemid, $smarty->dbh(), $smarty->opt());
 			$stmt = $smarty->dbh()->prepare("DELETE FROM {$opt["table_prefix"]}items WHERE itemid = ?");
 			$stmt->bindParam(1, $itemid, PDO::PARAM_INT);
 			$stmt->execute();
-		}
-		else {
+		} else {
 			// decrement the item's desired quantity.
 			$stmt = $smarty->dbh()->prepare("UPDATE {$opt["table_prefix"]}items SET quantity = quantity - ? WHERE itemid = ?");
 			$stmt->bindParam(1, $actual, PDO::PARAM_INT);
 			$stmt->bindParam(2, $itemid, PDO::PARAM_INT);
 			$stmt->execute();
 		}
-	
+
 		header("Location: " . getFullPath("index.php?message=Item+marked+as+received."));
 		exit;
 	}
 
 	$stmt = $smarty->dbh()->prepare("SELECT u.userid, u.fullname " .
-			"FROM {$opt["table_prefix"]}shoppers s " .
-			"INNER JOIN {$opt["table_prefix"]}users u ON u.userid = s.shopper " .
-			"WHERE s.mayshopfor = ? " .
-				"AND pending = 0 " .
-			"ORDER BY u.fullname");
+		"FROM {$opt["table_prefix"]}shoppers s " .
+		"INNER JOIN {$opt["table_prefix"]}users u ON u.userid = s.shopper " .
+		"WHERE s.mayshopfor = ? " .
+		"AND pending = 0 " .
+		"ORDER BY u.fullname");
 	$stmt->bindParam(1, $userid, PDO::PARAM_INT);
 	$stmt->execute();
 	$buyers = array();
@@ -109,8 +105,7 @@ try {
 	$smarty->assign('itemid', $itemid);
 	$smarty->assign('userid', $userid);
 	$smarty->display('receive.tpl');
-}
-catch (PDOException $e) {
+} catch (PDOException $e) {
 	die("sql exception: " . $e->getMessage());
 }
 ?>

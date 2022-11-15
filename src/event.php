@@ -22,13 +22,12 @@ session_start();
 if (!isset($_SESSION["userid"])) {
 	header("Location: " . getFullPath("login.php"));
 	exit;
-}
-else {
+} else {
 	$userid = $_SESSION["userid"];
 }
 
 if (!empty($_GET["message"])) {
-    $message = $_GET["message"];
+	$message = $_GET["message"];
 }
 
 if (isset($_GET["eventid"])) {
@@ -52,8 +51,7 @@ if (isset($eventid)) {
 		$stmt->execute();
 		if (!$stmt->fetch())
 			die("Nice try! (That's not your event.)");
-	}
-	catch (PDOException $e) {
+	} catch (PDOException $e) {
 		die("sql exception: " . $e->getMessage());
 	}
 }
@@ -65,13 +63,12 @@ if ($action == "insert" || $action == "update") {
 	$description = trim($_GET["description"]);
 	try {
 		$eventdate = new DateTime($_GET["eventdate"]);
-	}
-	catch (Exception $e) {
+	} catch (Exception $e) {
 		$eventdate = FALSE;
 	}
 	$recurring = (strtoupper($_GET["recurring"]) == "ON" ? 1 : 0);
 	$systemevent = (strtoupper($_GET["systemevent"]) == "ON" ? 1 : 0);
-		
+
 	$haserror = false;
 	if ($description == "") {
 		$haserror = true;
@@ -92,16 +89,14 @@ if ($action == "delete") {
 
 		header("Location: " . getFullPath("event.php?message=Event+deleted."));
 		exit;
-	}
-	catch (PDOException $e) {
+	} catch (PDOException $e) {
 		die("sql exception: " . $e->getMessage());
 	}
-}
-else if ($action == "edit") {
+} else if ($action == "edit") {
 	try {
 		$stmt = $smarty->dbh()->prepare("SELECT description, eventdate, recurring, userid FROM {$opt["table_prefix"]}events WHERE eventid = ?");
 		$stmt->bindParam(1, $eventid, PDO::PARAM_INT);
-		
+
 		$stmt->execute();
 
 		// we know this will work, see above.
@@ -110,18 +105,15 @@ else if ($action == "edit") {
 		$eventdate = new DateTime($row["eventdate"]);
 		$recurring = $row["recurring"];
 		$systemevent = ($row["userid"] == "");
-	}
-	catch (PDOException $e) {
+	} catch (PDOException $e) {
 		die("sql exception: " . $e->getMessage());
 	}
-}
-else if ($action == "") {
+} else if ($action == "") {
 	$description = "";
 	$eventdate = new DateTime();
 	$recurring = 1;
 	$systemevent = 0;
-}
-else if ($action == "insert") {
+} else if ($action == "insert") {
 	if (!$haserror) {
 		try {
 			$stmt = $smarty->dbh()->prepare("INSERT INTO {$opt["table_prefix"]}events(userid,description,eventdate,recurring) VALUES(?, ?, ?, ?)");
@@ -131,23 +123,21 @@ else if ($action == "insert") {
 			$stmt->bindParam(4, $recurring, PDO::PARAM_BOOL);
 
 			$stmt->execute();
-		
+
 			header("Location: " . getFullPath("event.php?message=Event+added."));
 			exit;
-		}
-		catch (PDOException $e) {
+		} catch (PDOException $e) {
 			die("sql exception: " . $e->getMessage());
 		}
 	}
-}
-else if ($action == "update") {
+} else if ($action == "update") {
 	if (!$haserror) {
 		try {
 			$stmt = $smarty->dbh()->prepare("UPDATE {$opt["table_prefix"]}events SET " .
 				"userid = ?, " .
 				"description = ?, " .
 				"eventdate = ?, " .
-				"recurring = ? " . 
+				"recurring = ? " .
 				"WHERE eventid = ?");
 			$stmt->bindValue(1, $systemevent ? NULL : $userid, PDO::PARAM_BOOL);
 			$stmt->bindParam(2, $description, PDO::PARAM_STR);
@@ -159,22 +149,20 @@ else if ($action == "update") {
 
 			header("Location: " . getFullPath("event.php?message=Event+updated."));
 			exit;
-		}
-		catch (PDOException $e) {
+		} catch (PDOException $e) {
 			die("sql exception: " . $e->getMessage());
 		}
 	}
-}
-else {
+} else {
 	die("Unknown verb.");
 }
 
 try {
 	$query = "SELECT eventid, userid, description, eventdate, recurring " .
-			"FROM {$opt["table_prefix"]}events " .
-			"WHERE userid = ?";
+		"FROM {$opt["table_prefix"]}events " .
+		"WHERE userid = ?";
 	if ($_SESSION["admin"] == 1)
-		$query .= " OR userid IS NULL";		// add in system events
+		$query .= " OR userid IS NULL"; // add in system events
 	$query .= " ORDER BY userid, eventdate";
 	$stmt = $smarty->dbh()->prepare($query);
 	$stmt->bindParam(1, $userid, PDO::PARAM_INT);
@@ -185,8 +173,7 @@ try {
 	while ($row = $stmt->fetch()) {
 		try {
 			$eventDateTime = new DateTime($row['eventdate']);
-		}
-		catch (Exception $e) {
+		} catch (Exception $e) {
 			die("There was an error with an event with datetime " . $row['eventdate']);
 		}
 		$row['eventdate'] = $eventDateTime->format($opt["date_format"]);
@@ -214,8 +201,7 @@ try {
 	}
 	$smarty->assign('userid', $userid);
 	$smarty->display('event.tpl');
-}
-catch (PDOException $e) {
+} catch (PDOException $e) {
 	die("sql exception: " . $e->getMessage());
 }
 ?>

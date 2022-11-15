@@ -22,8 +22,7 @@ session_start();
 if (!isset($_SESSION["userid"])) {
 	header("Location: " . getFullPath("login.php"));
 	exit;
-}
-else {
+} else {
 	$userid = $_SESSION["userid"];
 }
 
@@ -39,8 +38,7 @@ if (isset($_REQUEST["itemid"]) && $_REQUEST["itemid"] != "") {
 		if (!$stmt->fetch()) {
 			die("Nice try! (That's not your item.)");
 		}
-	}
-	catch (PDOException $e) {
+	} catch (PDOException $e) {
 		die("sql exception: " . $e->getMessage());
 	}
 }
@@ -48,11 +46,11 @@ if (isset($_REQUEST["itemid"]) && $_REQUEST["itemid"] != "") {
 $action = "";
 if (!empty($_REQUEST["action"])) {
 	$action = $_REQUEST["action"];
-	
+
 	if ($action == "insert" || $action == "update") {
 		/* validate the data. */
 		$description = trim($_REQUEST["description"]);
-		$price = str_replace(",","",trim($_REQUEST["price"]));
+		$price = str_replace(",", "", trim($_REQUEST["price"]));
 		$source = trim($_REQUEST["source"]);
 		$url = trim($_REQUEST["url"]);
 		$category = trim($_REQUEST["category"]);
@@ -66,7 +64,7 @@ if (!empty($_REQUEST["action"])) {
 			$haserror = true;
 			$description_error = "A description is required.";
 		}
-		if ($price == "" || !preg_match("/^\d*(\.\d{2})?$/i",$price)) {
+		if ($price == "" || !preg_match("/^\d*(\.\d{2})?$/i", $price)) {
 			$haserror = true;
 			$price_error = "Price format is not valid.<br />Price is required and must be a number, either accurate or approximate.<br />Do not enter the currency symbol.";
 		}
@@ -74,7 +72,7 @@ if (!empty($_REQUEST["action"])) {
 			$haserror = true;
 			$source_error = "A source is required (i.e., where it can be purchased).";
 		}
-		if ($url != "" && !preg_match("/^http(s)?:\/\/([^\/]+)/i",$url)) {
+		if ($url != "" && !preg_match("/^http(s)?:\/\/([^\/]+)/i", $url)) {
 			$haserror = true;
 			$url_error = "A well-formed URL is required in the format <i>http://www.somesite.net/somedir/somefile.html</i>.";
 		}
@@ -101,18 +99,18 @@ if (!empty($_REQUEST["action"])) {
 			$parts = pathinfo($_SERVER["SCRIPT_FILENAME"]);
 			$upload_dir = $parts['dirname'];
 			// generate a temporary file in the configured directory.
-			$temp_name = tempnam($upload_dir . "/" . $opt["image_subdir"],"");
+			$temp_name = tempnam($upload_dir . "/" . $opt["image_subdir"], "");
 			// unlink it, we really want an extension on that.
 			unlink($temp_name);
 			// here's the name we really want to use.  full path is included.
 			$image_filename = $temp_name . "." . $uploaded_file_ext;
 			// move the PHP temporary file to that filename.
-			move_uploaded_file($_FILES["imagefile"]["tmp_name"],$image_filename);
+			move_uploaded_file($_FILES["imagefile"]["tmp_name"], $image_filename);
 			// the name we're going to record in the DB is the filename without the path.
 			$image_base_filename = basename($image_filename);
 		}
 	}
-	
+
 	if ($action == "delete") {
 		try {
 			/* find out if this item is bought or reserved. */
@@ -124,16 +122,18 @@ if (!empty($_REQUEST["action"])) {
 				$buyerid = $row["userid"];
 				$quantity = $row["quantity"];
 				$bought = $row["bought"];
-				$description = $row["description"];	// need this for descriptions.
+				$description = $row["description"]; // need this for descriptions.
 				if ($buyerid != null) {
-					sendMessage($userid,
+					sendMessage(
+						$userid,
 						$buyerid,
 						"$description that you " . (($bought == 1) ? "bought" : "reserved") . " $quantity of for {$_SESSION["fullname"]} has been deleted.  Check your reservation/purchase to ensure it's still needed.",
 						$smarty->dbh(),
-						$smarty->opt());
+						$smarty->opt()
+					);
 				}
 			}
-	
+
 			deleteImageForItem((int) $_REQUEST["itemid"], $smarty->dbh(), $smarty->opt());
 
 			$stmt = $smarty->dbh()->prepare("DELETE FROM {$opt["table_prefix"]}items WHERE itemid = ?");
@@ -141,25 +141,23 @@ if (!empty($_REQUEST["action"])) {
 			$stmt->execute();
 
 			// TODO: are we leaking allocs records here?
-		
+
 			stampUser($userid, $smarty->dbh(), $smarty->opt());
 			processSubscriptions($userid, $action, $description, $smarty->dbh(), $smarty->opt());
 
 			header("Location: " . getFullPath("index.php?message=Item+deleted."));
 			exit;
-		}
-		catch (PDOException $e) {
+		} catch (PDOException $e) {
 			die("sql exception: " . $e->getMessage());
 		}
-	}
-	else if ($action == "edit") {
+	} else if ($action == "edit") {
 		$stmt = $smarty->dbh()->prepare("SELECT description, price, source, category, url, ranking, comment, quantity, image_filename, hidden FROM {$opt["table_prefix"]}items WHERE itemid = ?");
 		$stmt->bindValue(1, (int) $_REQUEST["itemid"], PDO::PARAM_INT);
 		$stmt->execute();
 
 		if ($row = $stmt->fetch()) {
 			$description = $row["description"];
-			$price = number_format($row["price"],2,".",",");
+			$price = number_format($row["price"], 2, ".", ",");
 			$source = $row["source"];
 			$url = $row["url"];
 			$category = $row["category"];
@@ -169,8 +167,7 @@ if (!empty($_REQUEST["action"])) {
 			$quantity = (int) $row["quantity"];
 			$image_filename = $row["image_filename"];
 		}
-	}
-	else if ($action == "add") {
+	} else if ($action == "add") {
 		$description = "";
 		$price = 0.00;
 		$source = "";
@@ -181,8 +178,7 @@ if (!empty($_REQUEST["action"])) {
 		$quantity = 1;
 		$hidden = 0;
 		$image_filename = "";
-	}
-	else if ($action == "insert") {
+	} else if ($action == "insert") {
 		if (!$haserror) {
 			$stmt = $smarty->dbh()->prepare("INSERT INTO {$opt["table_prefix"]}items(userid,description,price,source,category,url,ranking,comment,quantity,hidden" . ($image_base_filename != "" ? ",image_filename" : "") . ") " .
 				"VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?, ?" . ($image_base_filename != "" ? ", ?)" : ")"));
@@ -200,29 +196,28 @@ if (!empty($_REQUEST["action"])) {
 				$stmt->bindParam(11, $image_base_filename, PDO::PARAM_STR);
 			}
 			$stmt->execute();
-			
+
 			stampUser($userid, $smarty->dbh(), $smarty->opt());
 			processSubscriptions($userid, $action, $description, $smarty->dbh(), $smarty->opt());
 
 			header("Location: " . getFullPath("index.php"));
 			exit;
 		}
-	}
-	else if ($action == "update") {
+	} else if ($action == "update") {
 		if (!$haserror) {
 			// TODO: if the quantity is updated, send a message to everyone who has an allocation for it.
 			$stmt = $smarty->dbh()->prepare("UPDATE {$opt["table_prefix"]}items SET " .
-					"description = ?, " .
-					"price = ?, " .
-					"source = ?, " .
-					"category = ?, " .
-					"url = ?, " .
-					"ranking = ?, " .
-					"comment = ?, " . 
-					"quantity = ?, " .
-					"hidden = ? " .
-					($image_base_filename != "" ? ", image_filename = ? " : "") .
-					"WHERE itemid = ?");
+				"description = ?, " .
+				"price = ?, " .
+				"source = ?, " .
+				"category = ?, " .
+				"url = ?, " .
+				"ranking = ?, " .
+				"comment = ?, " .
+				"quantity = ?, " .
+				"hidden = ? " .
+				($image_base_filename != "" ? ", image_filename = ? " : "") .
+				"WHERE itemid = ?");
 			$stmt->bindParam(1, $description, PDO::PARAM_STR);
 			$stmt->bindParam(2, $price);
 			$stmt->bindParam(3, $source, PDO::PARAM_STR);
@@ -235,8 +230,7 @@ if (!empty($_REQUEST["action"])) {
 			if ($image_base_filename != "") {
 				$stmt->bindParam(10, $image_base_filename, PDO::PARAM_STR);
 				$stmt->bindValue(11, (int) $_REQUEST["itemid"], PDO::PARAM_INT);
-			}
-			else {
+			} else {
 				$stmt->bindValue(10, (int) $_REQUEST["itemid"], PDO::PARAM_INT);
 			}
 			$stmt->execute();
@@ -245,10 +239,9 @@ if (!empty($_REQUEST["action"])) {
 			processSubscriptions($userid, $action, $description, $smarty->dbh(), $smarty->opt());
 
 			header("Location: " . getFullPath("index.php"));
-			exit;		
+			exit;
 		}
-	}
-	else {
+	} else {
 		echo "Unknown verb.";
 		exit;
 	}

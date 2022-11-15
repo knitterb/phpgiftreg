@@ -22,8 +22,7 @@ session_start();
 if (!isset($_SESSION["userid"])) {
 	header("Location: " . getFullPath("login.php"));
 	exit;
-}
-else {
+} else {
 	$userid = $_SESSION["userid"];
 }
 
@@ -34,18 +33,18 @@ if ($action == "send") {
 
 	for ($i = 0; $i < count($_GET["recipients"]); $i++)
 		sendMessage($userid, (int) $_GET["recipients"][$i], $msg, $smarty->dbh(), $smarty->opt());
-		
+
 	header("Location: " . getFullPath("index.php?message=Your+message+has+been+sent+to+" . count($_GET["recipients"]) . "+recipient(s)."));
 	exit;
 }
 
 try {
 	$stmt = $smarty->dbh()->prepare("SELECT u.userid, u.fullname " .
-			"FROM {$opt["table_prefix"]}shoppers s " .
-			"INNER JOIN {$opt["table_prefix"]}users u ON u.userid = s.mayshopfor " .
-			"WHERE s.shopper = ? " .
-				"AND pending = 0 " .
-			"ORDER BY u.fullname");
+		"FROM {$opt["table_prefix"]}shoppers s " .
+		"INNER JOIN {$opt["table_prefix"]}users u ON u.userid = s.mayshopfor " .
+		"WHERE s.shopper = ? " .
+		"AND pending = 0 " .
+		"ORDER BY u.fullname");
 	$stmt->bindParam(1, $userid, PDO::PARAM_INT);
 	$stmt->execute();
 	$recipients = array();
@@ -59,8 +58,7 @@ try {
 	$smarty->assign('rcount', $rcount);
 	$smarty->assign('userid', $userid);
 	$smarty->display('message.tpl');
-}
-catch (PDOException $e) {
+} catch (PDOException $e) {
 	die("sql exception: " . $e->getMessage());
 }
 ?>

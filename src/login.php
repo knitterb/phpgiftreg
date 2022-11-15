@@ -40,19 +40,17 @@ if (!empty($_POST["username"])) {
 			$_SESSION["userid"] = $row["userid"];
 			$_SESSION["fullname"] = $row["fullname"];
 			$_SESSION["admin"] = $row["admin"];
-		
+
 			header("Location: " . getFullPath("index.php"));
 			exit;
 		}
-	}
-	catch (PDOException $e) {
+	} catch (PDOException $e) {
 		die("sql exception: " . $e->getMessage());
 	}
 
 	$smarty->assign('username', $username);
 	$smarty->display('login.tpl');
-}
-else {
+} else {
 	$smarty->display('login.tpl');
 }
 ?>

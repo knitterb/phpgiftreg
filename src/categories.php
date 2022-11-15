@@ -22,16 +22,14 @@ session_start();
 if (!isset($_SESSION["userid"])) {
 	header("Location: " . getFullPath("login.php"));
 	exit;
-}
-else if ($_SESSION["admin"] != 1) {
+} else if ($_SESSION["admin"] != 1) {
 	echo "You don't have admin privileges.";
 	exit;
-}
-else {
+} else {
 	$userid = $_SESSION["userid"];
 }
 if (!empty($_GET["message"])) {
-    $message = $_GET["message"];
+	$message = $_GET["message"];
 }
 
 $action = isset($_GET["action"]) ? $_GET["action"] : "";
@@ -39,7 +37,7 @@ $action = isset($_GET["action"]) ? $_GET["action"] : "";
 if ($action == "insert" || $action == "update") {
 	/* validate the data. */
 	$category = trim($_GET["category"]);
-		
+
 	$haserror = false;
 	if ($category == "") {
 		$haserror = true;
@@ -56,53 +54,48 @@ if ($action == "delete") {
 	$stmt = $smarty->dbh()->prepare("DELETE FROM {$opt["table_prefix"]}categories WHERE categoryid = ?");
 	$stmt->bindValue(1, (int) $_GET["categoryid"], PDO::PARAM_INT);
 	$stmt->execute();
-	
+
 	header("Location: " . getFullPath("categories.php?message=Category+deleted."));
 	exit;
-}
-else if ($action == "edit") {
+} else if ($action == "edit") {
 	$stmt = $smarty->dbh()->prepare("SELECT category FROM {$opt["table_prefix"]}categories WHERE categoryid = ?");
 	$stmt->bindValue(1, (int) $_GET["categoryid"], PDO::PARAM_INT);
 	$stmt->execute();
 	if ($row = $stmt->fetch()) {
 		$category = $row["category"];
 	}
-}
-else if ($action == "") {
+} else if ($action == "") {
 	$category = "";
-}
-else if ($action == "insert") {
+} else if ($action == "insert") {
 	if (!$haserror) {
 		$stmt = $smarty->dbh()->prepare("INSERT INTO {$opt["table_prefix"]}categories(categoryid,category) VALUES(NULL, ?)");
 		$stmt->bindParam(1, $category, PDO::PARAM_STR);
 		$stmt->execute();
-		
+
 		header("Location: " . getFullPath("categories.php?message=Category+added."));
 		exit;
 	}
-}
-else if ($action == "update") {
+} else if ($action == "update") {
 	if (!$haserror) {
 		$stmt = $smarty->dbh()->prepare("UPDATE {$opt["table_prefix"]}categories " .
-					"SET category = ? " .
-					"WHERE categoryid = ?");
+			"SET category = ? " .
+			"WHERE categoryid = ?");
 		$stmt->bindParam(1, $category, PDO::PARAM_STR);
 		$stmt->bindValue(2, (int) $_GET["categoryid"], PDO::PARAM_INT);
 		$stmt->execute();
-		
+
 		header("Location: " . getFullPath("categories.php?message=Category+updated."));
-		exit;		
+		exit;
 	}
-}
-else {
+} else {
 	die("Unknown verb.");
 }
 
 $stmt = $smarty->dbh()->prepare("SELECT c.categoryid, c.category, COUNT(itemid) AS itemsin " .
-			"FROM {$opt["table_prefix"]}categories c " .
-			"LEFT OUTER JOIN {$opt["table_prefix"]}items i ON i.category = c.categoryid " .
-			"GROUP BY c.categoryid, category " .
-			"ORDER BY category");
+	"FROM {$opt["table_prefix"]}categories c " .
+	"LEFT OUTER JOIN {$opt["table_prefix"]}items i ON i.category = c.categoryid " .
+	"GROUP BY c.categoryid, category " .
+	"ORDER BY category");
 $stmt->execute();
 $categories = array();
 while ($row = $stmt->fetch()) {

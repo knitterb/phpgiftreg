@@ -22,8 +22,7 @@ session_start();
 if (!isset($_SESSION["userid"])) {
 	header("Location: " . getFullPath("login.php"));
 	exit;
-}
-else {
+} else {
 	$userid = $_SESSION["userid"];
 }
 
@@ -32,24 +31,20 @@ if (!empty($_GET["action"])) {
 	$action = $_GET["action"];
 	$itemid = (int) $_GET["itemid"];
 	if ($action == "reserve") {
-		adjustAllocQuantity($itemid,$userid,0,+1, $smarty->dbh(), $smarty->opt());
-	}
-	else if ($action == "purchase") {
+		adjustAllocQuantity($itemid, $userid, 0, +1, $smarty->dbh(), $smarty->opt());
+	} else if ($action == "purchase") {
 		// decrement reserved.
-		adjustAllocQuantity($itemid,$userid,0,-1, $smarty->dbh(), $smarty->opt());
+		adjustAllocQuantity($itemid, $userid, 0, -1, $smarty->dbh(), $smarty->opt());
 		// increment purchased.
-		adjustAllocQuantity($itemid,$userid,1,+1, $smarty->dbh(), $smarty->opt());
-	}
-	else if ($action == "return") {
+		adjustAllocQuantity($itemid, $userid, 1, +1, $smarty->dbh(), $smarty->opt());
+	} else if ($action == "return") {
 		// increment reserved.
-		adjustAllocQuantity($itemid,$userid,0,+1, $smarty->dbh(), $smarty->opt());
+		adjustAllocQuantity($itemid, $userid, 0, +1, $smarty->dbh(), $smarty->opt());
 		// decrement purchased.
-		adjustAllocQuantity($itemid,$userid,1,-1, $smarty->dbh(), $smarty->opt());
-	}
-	else if ($action == "release") {
-		adjustAllocQuantity($itemid,$userid,0,-1, $smarty->dbh(), $smarty->opt());
-	}
-	else if ($action == "copy") {
+		adjustAllocQuantity($itemid, $userid, 1, -1, $smarty->dbh(), $smarty->opt());
+	} else if ($action == "release") {
+		adjustAllocQuantity($itemid, $userid, 0, -1, $smarty->dbh(), $smarty->opt());
+	} else if ($action == "copy") {
 		/* 
 		can't do this because MySQL 3.x doesn't seem to support it (at least the version i was using).
 		$query = "INSERT INTO items(userid,description,price,source,url,category) SELECT $userid, description, price, source, url, category FROM items WHERE itemid = " . $_GET["itemid"];
@@ -65,7 +60,7 @@ if (!empty($_GET["action"])) {
 			$comment = $row["comment"];
 			$price = (float) $row["price"];
 			$cat = (int) $row["category"];
-		
+
 			$stmt = $smarty->dbh()->prepare("INSERT INTO {$opt["table_prefix"]}items(userid,description,price,source,url,comment,category,ranking,quantity) VALUES(?, ?, ?, ?, ?, ?, ?, 1, 1");
 			$stmt->bindParam(1, $userid, PDO::PARAM_INT);
 			$stmt->bindParam(2, $desc, PDO::PARAM_STR);
@@ -73,9 +68,9 @@ if (!empty($_GET["action"])) {
 			$stmt->bindParam(4, $source, PDO::PARAM_STR);
 			$stmt->bindParam(5, $url, PDO::PARAM_STR);
 			$stmt->bindParam(6, $comment, PDO::PARAM_STR);
-			$stmt->bindParam(7,	$cat, PDO::PARAM_INT);
+			$stmt->bindParam(7, $cat, PDO::PARAM_INT);
 			$stmt->execute();
-		
+
 			stampUser($userid, $smarty->dbh(), $smarty->opt());
 
 			$message = "Added '" . $desc . "' to your gift list.";
@@ -99,8 +94,7 @@ if (!($stmt->fetch())) {
 
 if (!isset($_GET["sort"])) {
 	$sortby = "rankorder DESC, description";
-}
-else {
+} else {
 	$sort = $_GET["sort"];
 	switch ($sort) {
 		case "ranking":
@@ -130,17 +124,17 @@ else {
 }
 
 /* here's what we're going to do: we're going to pull back the shopping list along with any alloc record
-	for those items with a quantity of 1.  if the item's quantity > 1 we'll query alloc when we
-	get to that record.  the theory is that most items will have quantity = 1 so we'll make the least
-	number of trips. */
+for those items with a quantity of 1.  if the item's quantity > 1 we'll query alloc when we
+get to that record.  the theory is that most items will have quantity = 1 so we'll make the least
+number of trips. */
 $stmt = $smarty->dbh()->prepare("SELECT i.itemid, description, price, source, c.category, url, image_filename, " .
-		"ub.fullname AS bfullname, ub.userid AS boughtid, " .
-		"ur.fullname AS rfullname, ur.userid AS reservedid, " .
-		"rendered, i.comment, i.quantity, i.hidden " .
+	"ub.fullname AS bfullname, ub.userid AS boughtid, " .
+	"ur.fullname AS rfullname, ur.userid AS reservedid, " .
+	"rendered, i.comment, i.quantity, i.hidden " .
 	"FROM {$opt["table_prefix"]}items i " .
 	"LEFT OUTER JOIN {$opt["table_prefix"]}categories c ON c.categoryid = i.category " .
 	"LEFT OUTER JOIN {$opt["table_prefix"]}ranks r ON r.ranking = i.ranking " .
-	"LEFT OUTER JOIN {$opt["table_prefix"]}allocs a ON a.itemid = i.itemid AND i.quantity = 1 " .	// only join allocs for single-quantity items.
+	"LEFT OUTER JOIN {$opt["table_prefix"]}allocs a ON a.itemid = i.itemid AND i.quantity = 1 " . // only join allocs for single-quantity items.
 	"LEFT OUTER JOIN {$opt["table_prefix"]}users ub ON ub.userid = a.userid AND a.bought = 1 " .
 	"LEFT OUTER JOIN {$opt["table_prefix"]}users ur ON ur.userid = a.userid AND a.bought = 0 " .
 	"WHERE i.userid = $shopfor AND i.hidden = 0 " .
@@ -154,13 +148,13 @@ while ($row = $stmt->fetch()) {
 		// check the allocs table to see what has been allocated.
 		$avail = $row['quantity'];
 		$substmt = $smarty->dbh()->prepare("SELECT a.quantity, a.bought, a.userid, " .
-					"ub.fullname AS bfullname, ub.userid AS boughtid, " .
-					"ur.fullname AS rfullname, ur.userid AS reservedid " .
-				"FROM {$opt["table_prefix"]}allocs a " .
-				"LEFT OUTER JOIN {$opt["table_prefix"]}users ub ON ub.userid = a.userid AND a.bought = 1 " .
-				"LEFT OUTER JOIN {$opt["table_prefix"]}users ur ON ur.userid = a.userid AND a.bought = 0 " .
-				"WHERE a.itemid = ? " .
-				"ORDER BY a.bought, a.quantity");
+			"ub.fullname AS bfullname, ub.userid AS boughtid, " .
+			"ur.fullname AS rfullname, ur.userid AS reservedid " .
+			"FROM {$opt["table_prefix"]}allocs a " .
+			"LEFT OUTER JOIN {$opt["table_prefix"]}users ub ON ub.userid = a.userid AND a.bought = 1 " .
+			"LEFT OUTER JOIN {$opt["table_prefix"]}users ur ON ur.userid = a.userid AND a.bought = 0 " .
+			"WHERE a.itemid = ? " .
+			"ORDER BY a.bought, a.quantity");
 		$substmt->bindValue(1, $row['itemid'], PDO::PARAM_INT);
 		$substmt->execute();
 		$ibought = 0;
@@ -171,26 +165,21 @@ while ($row = $stmt->fetch()) {
 				if ($allocrow['boughtid'] == $userid) {
 					$ibought += $allocrow['quantity'];
 					$itemallocs[] = ($allocrow['quantity'] . " bought by you.");
-				}
-				else {
+				} else {
 					if (!$opt["anonymous_purchasing"]) {
 						$itemallocs[] = ($allocrow['quantity'] . " bought by " . $allocrow['bfullname'] . ".");
-					}
-					else {
+					} else {
 						$itemallocs[] = ($allocrow['quantity'] . " bought.");
 					}
 				}
-			}
-			else {
+			} else {
 				if ($allocrow['reservedid'] == $userid) {
 					$ireserved += $allocrow['quantity'];
 					$itemallocs[] = ($allocrow['quantity'] . " reserved by you.");
-				}
-				else {
+				} else {
 					if (!$opt["anonymous_purchasing"]) {
 						$itemallocs[] = ($allocrow['quantity'] . " reserved by " . $allocrow['rfullname'] . ".");
-					}
-					else {
+					} else {
 						$itemallocs[] = ($allocrow['quanitity'] . " reserved.");
 					}
 				}
@@ -206,9 +195,9 @@ while ($row = $stmt->fetch()) {
 }
 
 /* okay, I *would* retrieve the shoppee's fullname from the items recordset,
-	except that I wouldn't get it if he had no items, so I *could* LEFT OUTER
-	JOIN, but then it would complicate the iteration logic, so let's just
-	hit the DB again. */
+except that I wouldn't get it if he had no items, so I *could* LEFT OUTER
+JOIN, but then it would complicate the iteration logic, so let's just
+hit the DB again. */
 $stmt = $smarty->dbh()->prepare("SELECT fullname FROM {$opt["table_prefix"]}users WHERE userid = ?");
 $stmt->bindParam(1, $shopfor, PDO::PARAM_INT);
 $stmt->execute();
