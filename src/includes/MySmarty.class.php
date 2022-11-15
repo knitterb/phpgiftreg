@@ -13,10 +13,12 @@ class MySmarty extends Smarty {
 
 	public function dbh() {
 		$opt = $this->opt();
-		return new PDO(
+		$dbh=new PDO(
 			$opt["pdo_connection_string"],
 			$opt["pdo_username"],
 			$opt["pdo_password"]);
+		$dbh->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+		return $dbh;
 	}
 
 	public function opt() {
