@@ -12,14 +12,6 @@
 // You should have received a copy of the GNU General Public License
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
-use PHPMailer\PHPMailer\PHPMailer;
-use PHPMailer\PHPMailer\SMTP;
-use PHPMailer\PHPMailer\Exception;
-
-require 'phpmailer/Exception.php';
-require 'phpmailer/SMTP.php';
-require 'phpmailer/PHPMailer.php';
-
 
 require_once(dirname(__FILE__) . "/includes/funcLib.php");
 require_once(dirname(__FILE__) . "/includes/MySmarty.class.php");
@@ -30,8 +22,7 @@ session_start();
 if (!isset($_SESSION["userid"])) {
 	header("Location: " . getFullPath("login.php"));
 	exit;
-}
-else {
+} else {
 	$userid = $_SESSION["userid"];
 }
 
@@ -41,7 +32,7 @@ if ($_SESSION["admin"] != 1) {
 }
 
 if (!empty($_GET["message"])) {
-    $message = $_GET["message"];
+	$message = $_GET["message"];
 }
 
 if (isset($_GET["action"]))
@@ -57,7 +48,7 @@ if ($action == "insert" || $action == "update") {
 	$email_msgs = (strtoupper($_GET["email_msgs"]) == "ON" ? 1 : 0);
 	$approved = (strtoupper($_GET["approved"]) == "ON" ? 1 : 0);
 	$userisadmin = (strtoupper($_GET["admin"]) == "ON" ? 1 : 0);
-		
+
 	$haserror = false;
 	if ($username == "") {
 		$haserror = true;
@@ -78,12 +69,12 @@ if ($action == "delete") {
 	// MySQL is too l4m3 to have cascade deletes, so we'll have to do the
 	// work ourselves.
 	$deluserid = (int) $_GET["userid"];
-	
+
 	$stmt = $smarty->dbh()->prepare("DELETE FROM {$opt["table_prefix"]}shoppers WHERE shopper = ? OR mayshopfor = ?");
 	$stmt->bindParam(1, $deluserid, PDO::PARAM_INT);
 	$stmt->bindParam(2, $deluserid, PDO::PARAM_INT);
 	$stmt->execute();
-	
+
 	// we can't leave messages with dangling senders, so delete those too.
 	$stmt = $smarty->dbh()->prepare("DELETE FROM {$opt["table_prefix"]}messages WHERE sender = ? OR recipient = ?");
 	$stmt->bindParam(1, $deluserid, PDO::PARAM_INT);
@@ -93,7 +84,7 @@ if ($action == "delete") {
 	$stmt = $smarty->dbh()->prepare("DELETE FROM {$opt["table_prefix"]}events WHERE userid = ?");
 	$stmt->bindParam(1, $deluserid, PDO::PARAM_INT);
 	$stmt->execute();
-	
+
 	$stmt = $smarty->dbh()->prepare("DELETE FROM {$opt["table_prefix"]}items WHERE userid = ?");
 	$stmt->bindParam(1, $deluserid, PDO::PARAM_INT);
 	$stmt->execute();
@@ -101,11 +92,10 @@ if ($action == "delete") {
 	$stmt = $smarty->dbh()->prepare("DELETE FROM {$opt["table_prefix"]}users WHERE userid = ?");
 	$stmt->bindParam(1, $deluserid, PDO::PARAM_INT);
 	$stmt->execute();
-	
+
 	header("Location: " . getFullPath("users.php?message=User+deleted."));
 	exit;
-}
-else if ($action == "edit") {
+} else if ($action == "edit") {
 	$stmt = $smarty->dbh()->prepare("SELECT username, fullname, email, email_msgs, approved, admin FROM {$opt["table_prefix"]}users WHERE userid = ?");
 	$stmt->bindValue(1, (int) $_GET["userid"], PDO::PARAM_INT);
 	$stmt->execute();
@@ -117,16 +107,14 @@ else if ($action == "edit") {
 		$approved = $row["approved"];
 		$userisadmin = $row["admin"];
 	}
-}
-else if ($action == "") {
+} else if ($action == "") {
 	$username = "";
 	$fullname = "";
 	$email = "";
 	$email_msgs = 1;
 	$approved = 1;
 	$userisadmin = 0;
-}
-else if ($action == "insert") {
+} else if ($action == "insert") {
 	if (!$haserror) {
 		// generate a password and insert the row.
 		$pwd = generatePassword($opt);
@@ -140,64 +128,26 @@ else if ($action == "insert") {
 		$stmt->bindParam(7, $userisadmin, PDO::PARAM_BOOL);
 		$stmt->execute();
 
-		if ($opt["ses_email_server"]=="") {
-
-		mail(
+		sendEmail(
 			$email,
-			"Gift Registry account created",
-			"Your Gift Registry account was created.\r\n" . 
-				"Your username is $username and your password is $pwd.",
-			"From: {$opt["email_from"]}\r\nReply-To: {$opt["email_reply_to"]}\r\nX-Mailer: {$opt["email_xmailer"]}\r\n"
-		) or die("Mail not accepted for $email");	
-
-		} else {
-		$mail = new PHPMailer(true);
-
-		try {
-		    // Specify the SMTP settings.
-		    $mail->isSMTP();
-		    $mail->setFrom($opt["email_from"], "PHP Gift Registry");
-			$mail->Username   = $opt["ses_email_username"];
-			$mail->Password   = $opt["ses_email_password"];
-			$mail->Host       = $opt["ses_email_server"];
-			$mail->Port       = 587;
-		    $mail->SMTPAuth   = true;
-		    $mail->SMTPSecure = 'tls';
-		    //$mail->addCustomHeader('X-SES-CONFIGURATION-SET', $configurationSet);
-
-		    // Specify the message recipients.
-		    $mail->addAddress($email);
-		    // You can also add CC, BCC, and additional To recipients here.
-
-		    // Specify the content of the message.
-		    $mail->isHTML(false);
-		    $mail->Subject    = "PHP Gift Registry: New Account";
-		    $mail->Body       = "Your username is $username and your password is $pwd.";
-		    //$mail->AltBody    = "test alt body";
-		    $mail->Send();
-		    //echo "Email sent!" , PHP_EOL;
-		} catch (phpmailerException $e) {
-		    echo "An error occurred. {$e->errorMessage()}", PHP_EOL; //Catch errors from PHPMailer.
-		} catch (Exception $e) {
-		    echo "Email not sent. {$mail->ErrorInfo}", PHP_EOL; //Catch errors from Amazon SES.
-		}
-	}
-
+			"PHP Gift Registry: New Account",
+			"Your username is $username and your password is $pwd.",
+			$opt
+		);
 
 		header("Location: " . getFullPath("users.php?message=User+added+and+e-mail+sent."));
 		exit;
 	}
-}
-else if ($action == "update") {
+} else if ($action == "update") {
 	if (!$haserror) {
 		$stmt = $smarty->dbh()->prepare("UPDATE {$opt["table_prefix"]}users SET " .
-				"username = ?, " .
-				"fullname = ?, " .
-				"email = ?, " .
-				"email_msgs = ?, " .
-				"approved = ?, " . 
-				"admin = ? " . 
-				"WHERE userid = ?");
+			"username = ?, " .
+			"fullname = ?, " .
+			"email = ?, " .
+			"email_msgs = ?, " .
+			"approved = ?, " .
+			"admin = ? " .
+			"WHERE userid = ?");
 		$stmt->bindParam(1, $username, PDO::PARAM_STR);
 		$stmt->bindParam(2, $fullname, PDO::PARAM_STR);
 		$stmt->bindParam(3, $email, PDO::PARAM_STR);
@@ -207,64 +157,29 @@ else if ($action == "update") {
 		$stmt->bindValue(7, (int) $_GET["userid"], PDO::PARAM_INT);
 		$stmt->execute();
 		header("Location: " . getFullPath("users.php?message=User+updated."));
-		exit;		
+		exit;
 	}
-}
-else if ($action == "reset") {
+} else if ($action == "reset") {
 	$resetuserid = $_GET["userid"];
 	$resetemail = $_GET["email"];
-	
+
 	// generate a password and insert the row.
 	$pwd = generatePassword($opt);
 	$stmt = $smarty->dbh()->prepare("UPDATE {$opt["table_prefix"]}users SET password = {$opt["password_hasher"]}(?) WHERE userid = ?");
 	$stmt->bindParam(1, $pwd, PDO::PARAM_STR);
 	$stmt->bindParam(2, $resetuserid, PDO::PARAM_INT);
 	$stmt->execute();
-	if ($opt["ses_email_server"]=="") {
-		mail(
+
+	sendEmail(
 		$resetemail,
-		"Gift Registry password reset",
+		"PHP Gift Registry: Password Reset",
 		"Your Gift Registry password was reset to $pwd.",
-		"From: {$opt["email_from"]}\r\nReply-To: {$opt["email_reply_to"]}\r\nX-Mailer: {$opt["email_xmailer"]}\r\n"
-	) or die("Mail not accepted for $email");
-			} else {
-	$mail = new PHPMailer(true);
+		$opt
+	);
 
-	try {
-	    // Specify the SMTP settings.
-	    $mail->isSMTP();
-	    $mail->setFrom($opt["email_from"], "PHP Gift Registry");
-	                                        $mail->Username   = $opt["ses_email_username"];
-                                    $mail->Password   = $opt["ses_email_password"];
-
-																		$mail->Host       = $opt["ses_email_server"];
-																		$mail->Port       = 587;
-	    $mail->SMTPAuth   = true;
-	    $mail->SMTPSecure = 'tls';
-	    //$mail->addCustomHeader('X-SES-CONFIGURATION-SET', $configurationSet);
-
-	    // Specify the message recipients.
-	    $mail->addAddress($resetemail);
-	    // You can also add CC, BCC, and additional To recipients here.
-
-	    // Specify the content of the message.
-	    $mail->isHTML(false);
-	    $mail->Subject    = "PHP Gift Registry: Password Reset";
-	    $mail->Body       = "Your Gift Registry password was reset to $pwd.";
-	    //$mail->AltBody    = "test alt body";
-	    $mail->Send();
-	    //echo "Email sent!" , PHP_EOL;
-	} catch (phpmailerException $e) {
-	    echo "An error occurred. {$e->errorMessage()}", PHP_EOL; //Catch errors from PHPMailer.
-	} catch (Exception $e) {
-	    echo "Email not sent. {$mail->ErrorInfo}", PHP_EOL; //Catch errors from Amazon SES.
-	}
-
-			}
 	header("Location: " . getFullPath("users.php?message=Password+reset."));
 	exit;
-}
-else {
+} else {
 	echo "Unknown verb.";
 	exit;
 }
