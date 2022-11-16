@@ -150,7 +150,7 @@ function sendMessage($sender, $recipient, $message, $dbh, $opt)
 		if ($row["email_msgs"] == 1) {
 			sendEmail(
 				$row["remail"], "Gift Registry message from " . $row["fullname"],
-				"From: {$opt["email_from"]}\r\nReply-To: " . $row["semail"] . "\r\nX-Mailer: {$opt["email_xmailer"]}\r\n",
+				$message,
 				$opt
 			);
 		}
