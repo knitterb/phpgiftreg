@@ -51,7 +51,7 @@ if (isset($_POST["action"]) && $_POST["action"] == "signup") {
 			$stmt->execute();
 			while ($row = $stmt->fetch()) {
 				sendEmail(
-					$email,
+					$row["email"],
 					"PHP Gift Registry: Account Creation Approval",
 					"$fullname  $email would like you to approve him/her for access to the Gift Registry.",
 					$opt
