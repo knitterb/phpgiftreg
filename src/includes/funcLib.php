@@ -170,7 +170,7 @@ function sendEmail($addr, $subj, $body, $opt)
 		try {
 			// Specify the SMTP settings.
 			$mail->isSMTP();
-			$mail->setFrom($opt["email_from"], "PHP Gift Registry");
+			$mail->setFrom($opt["ses_email_from"], "PHP Gift Registry");
 			$mail->Username = $opt["ses_email_username"];
 			$mail->Password = $opt["ses_email_password"];
 			$mail->Host = $opt["ses_email_server"];
